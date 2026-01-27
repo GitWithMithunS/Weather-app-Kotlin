@@ -8,7 +8,9 @@ import com.example.weatherapp.ui.login.LoginScreen
 import com.example.weatherapp.ui.home.HomeScreen
 import com.example.weatherapp.ui.theme.AppTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
