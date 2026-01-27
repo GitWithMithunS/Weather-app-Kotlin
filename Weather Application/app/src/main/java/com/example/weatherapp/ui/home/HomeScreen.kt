@@ -3,122 +3,52 @@ package com.example.weatherapp.ui.home
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.weatherapp.ui.components.AppBottomBar
-import com.example.weatherapp.ui.components.AppTopBar
-import com.example.weatherapp.ui.components.BottomNavItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onCityClick: (String) -> Unit,
-    onCitiesClick: () -> Unit,
-    onLogout: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    uiState: HomeUiState = HomeUiState()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
 
-    Scaffold(
-        topBar = {
-            AppTopBar(
-                username = state.username,
-                showLogout = true,
-                onLogoutClick = {
-                    viewModel.logout(onLogout)
-                }
-            )
-        },
-        bottomBar = {
-            AppBottomBar(
-                selectedItem = BottomNavItem.HOME,
-                onHomeClick = {},
-                onCitiesClick = onCitiesClick
-            )
-        }
-    ) { padding ->
+        // City
+        Text(
+            text = uiState.city,
+            style = MaterialTheme.typography.headlineSmall
+        )
 
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
+        Spacer(modifier = Modifier.height(8.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-            ) {
+        // Temperature
+        Text(
+            text = uiState.temperature,
+            style = MaterialTheme.typography.displayMedium
+        )
 
-                // City
-                Text(
-                    text = state.city,
-                    style = MaterialTheme.typography.titleLarge
-                )
+        Text(
+            text = uiState.condition,
+            style = MaterialTheme.typography.bodyMedium
+        )
 
-                Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-                //  Weather Card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+        Text(
+            text = "10-Day Forecast",
+            style = MaterialTheme.typography.titleMedium
+        )
 
-                        Text(
-                            text = state.temperature,
-                            style = MaterialTheme.typography.displayLarge
-                        )
+        Spacer(modifier = Modifier.height(8.dp))
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = state.description,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                //  Forecast Title
-                Text(
-                    text = "5-Day Forecast",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                //  Forecast List
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.forecast) { day ->
-                        ForecastItem(text = day)
-                    }
-                }
+        LazyColumn {
+            items(uiState.forecast) { forecastDay ->
+                ForecastItem(item = forecastDay)
             }
         }
     }
