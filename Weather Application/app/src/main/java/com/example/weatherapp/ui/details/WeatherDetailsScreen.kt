@@ -4,11 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -17,18 +16,16 @@ import com.example.weatherapp.ui.components.AppBottomBar
 import com.example.weatherapp.ui.components.AppTopBar
 import com.example.weatherapp.ui.components.BottomNavItem
 
-
 @Composable
 fun WeatherDetailsScreen(
     cityName: String,
     onBackClick: () -> Unit,
     onHomeClick: () -> Unit,
     onCitiesClick: () -> Unit,
-    viewModel: WeatherDetailsViewModel = hiltViewModel()  // ← GET VIEWMODEL
+    viewModel: WeatherDetailsViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()  // ← COLLECT STATE FROM VIEWMODEL
+    val state by viewModel.uiState.collectAsState()
 
-    // ← THIS IS THE KEY! Load weather when city changes
     LaunchedEffect(cityName) {
         viewModel.loadWeather(cityName)
     }
@@ -41,11 +38,10 @@ fun WeatherDetailsScreen(
     )
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeatherDetailsContent(
-    state: WeatherDetailsUiState,  // ← USE STATE FROM VIEWMODEL, NOT HARDCODED DATA
+    state: WeatherDetailsUiState,
     onBack: () -> Unit,
     onHomeClick: () -> Unit,
     onCitiesClick: () -> Unit,
@@ -53,7 +49,7 @@ private fun WeatherDetailsContent(
     Scaffold(
         topBar = {
             AppTopBar(
-                username = state.city,  // ← USE REAL CITY NAME
+                username = state.city,
                 showBackButton = true,
                 onBackClick = onBack
             )
@@ -67,187 +63,224 @@ private fun WeatherDetailsContent(
         }
     ) { padding ->
 
-        // ← SHOW LOADING
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        when {
+            state.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        }
-        // ← SHOW ERROR
-        else if (state.error != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(16.dp)
+
+            state.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = state.error ?: "Unknown error",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.titleMedium
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
-        }
-        // ← SHOW DATA
-        else {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
 
-                // ===== CURRENT WEATHER CARD =====
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = state.temperature,  // ← REAL TEMPERATURE
-                                style = MaterialTheme.typography.displayLarge
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = state.description,  // ← REAL DESCRIPTION
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "Feels like ${state.feelsLike}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
 
-                // ===== HOURLY BREAKDOWN =====
-                item {
-                    Text(
-                        text = "Hourly Breakdown",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                if (state.hourlyData.isNotEmpty()) {
+                    /* ===== CURRENT WEATHER ===== */
                     item {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp)
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         ) {
-                            items(state.hourlyData) { hour ->  // ← REAL HOURLY DATA
-                                Card(
-                                    modifier = Modifier.width(120.dp),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Column(
-                                        modifier = Modifier.padding(12.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    Icon(
+                                        imageVector = Icons.Filled.Cloud,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(72.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(Modifier.height(12.dp))
+
+                                    Text(
+                                        text = state.temperature,
+                                        style = MaterialTheme.typography.displayLarge
+                                    )
+
+                                    Text(
+                                        text = state.description,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+
+                                    Spacer(Modifier.height(4.dp))
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(hour.time)
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            hour.temperature,  // ← REAL TEMP
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.primary
+                                        Icon(
+                                            imageVector = Icons.Filled.DeviceThermostat,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
                                         )
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            hour.description,  // ← REAL DESCRIPTION
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("Feels like ${state.feelsLike}")
                                     }
                                 }
                             }
                         }
                     }
-                } else {
+
+                    /* ===== HOURLY BREAKDOWN ===== */
                     item {
-                        Text("No hourly data available")
-                    }
-                }
-
-                // ===== STATS GRID =====
-                item {
-                    StatsGrid(
-                        humidity = state.humidity,  // ← REAL DATA
-                        wind = state.wind,  // ← REAL DATA
-                        feelsLike = state.feelsLike,  // ← REAL DATA
-                        pressure = state.pressure,  // ← REAL DATA
-                        visibility = state.visibility,  // ← REAL DATA
-                        cloudiness = state.cloudiness  // ← REAL DATA
-                    )
-                }
-
-                // ===== SUNRISE/SUNSET =====
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        Text(
+                            text = "Hourly Breakdown",
+                            style = MaterialTheme.typography.titleMedium
                         )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                    }
+
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Sunrise", style = MaterialTheme.typography.bodySmall)
-                                Text(state.sunrise, style = MaterialTheme.typography.titleMedium)  // ← REAL DATA
-                            }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Sunset", style = MaterialTheme.typography.bodySmall)
-                                Text(state.sunset, style = MaterialTheme.typography.titleMedium)  // ← REAL DATA
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp)
+                            ) {
+                                items(state.hourlyData) { hour ->
+                                    Card(
+                                        modifier = Modifier.width(120.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                        )
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(hour.time)
+
+                                                Spacer(Modifier.height(4.dp))
+
+                                                Icon(
+                                                    imageVector = Icons.Filled.WbSunny,
+                                                    contentDescription = null
+                                                )
+
+                                                Spacer(Modifier.height(4.dp))
+
+                                                Text(
+                                                    hour.temperature,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                }
 
-                // ===== 5-DAY FORECAST =====
-                item {
-                    Text(
-                        text = "5-Day Forecast",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                    /* ===== STATS GRID ===== */
+                    item {
+                        StatsGrid(
+                            humidity = state.humidity,
+                            wind = state.wind,
+                            pressure = state.pressure,
+                            visibility = state.visibility,
+                            cloudiness = state.cloudiness
+                        )
+                    }
 
-                items(state.dailyForecast) { day ->  // ← REAL DAILY DATA
-                    Card {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    /* ===== SUNRISE / SUNSET ===== */
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
                         ) {
-                            Column {
-                                Text(day.day, style = MaterialTheme.typography.titleSmall)
-                                Text(day.description, style = MaterialTheme.typography.bodySmall)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly
+                            ) {
+                                SunInfo(
+                                    title = "Sunrise",
+                                    time = state.sunrise,
+                                    icon = Icons.Filled.WbSunny
+                                )
+                                SunInfo(
+                                    title = "Sunset",
+                                    time = state.sunset,
+                                    icon = Icons.Filled.LightMode
+                                )
                             }
-                            Text("${day.maxTemp} / ${day.minTemp}")
+                        }
+                    }
+
+                    /* ===== 5-DAY FORECAST ===== */
+                    item {
+                        Text(
+                            text = "5-Day Forecast",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    items(state.dailyForecast) { day ->
+                        Card {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Cloud,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Column {
+                                        Text(day.day)
+                                        Text(
+                                            day.description,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+                                Text("${day.maxTemp} / ${day.minTemp}")
+                            }
                         }
                     }
                 }
@@ -256,12 +289,12 @@ private fun WeatherDetailsContent(
     }
 }
 
+/* ================= COMPONENTS ================= */
 
 @Composable
 private fun StatsGrid(
     humidity: String,
     wind: String,
-    feelsLike: String,
     pressure: String,
     visibility: String,
     cloudiness: String
@@ -269,37 +302,17 @@ private fun StatsGrid(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard(
-                title = "Humidity",
-                value = humidity,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Wind",
-                value = wind,
-                modifier = Modifier.weight(1f)
-            )
+            StatCard("Humidity", humidity, Icons.Filled.WaterDrop, Modifier.weight(1f))
+            StatCard("Wind", wind, Icons.Filled.Air, Modifier.weight(1f))
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard(
-                title = "Pressure",
-                value = pressure,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Visibility",
-                value = visibility,
-                modifier = Modifier.weight(1f)
-            )
+            StatCard("Pressure", pressure, Icons.Filled.Speed, Modifier.weight(1f))
+            StatCard("Visibility", visibility, Icons.Filled.Visibility, Modifier.weight(1f))
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard(
-                title = "Cloudiness",
-                value = cloudiness,
-                modifier = Modifier.weight(1f)
-            )
+            StatCard("Cloudiness", cloudiness, Icons.Filled.Cloud, Modifier.weight(1f))
         }
     }
 }
@@ -308,16 +321,16 @@ private fun StatsGrid(
 private fun StatCard(
     title: String,
     value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
+    Card(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.bodySmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(title, style = MaterialTheme.typography.bodySmall)
+            }
             Spacer(Modifier.height(4.dp))
             Text(
                 value,
@@ -325,5 +338,19 @@ private fun StatCard(
                 color = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+@Composable
+private fun SunInfo(
+    title: String,
+    time: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(icon, contentDescription = null)
+        Spacer(Modifier.height(4.dp))
+        Text(title, style = MaterialTheme.typography.bodySmall)
+        Text(time, style = MaterialTheme.typography.titleMedium)
     }
 }
