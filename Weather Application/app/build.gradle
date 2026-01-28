@@ -3,10 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    // ✅ REQUIRED for Room & Hilt
+    //  REQUIRED for Room & Hilt
     alias(libs.plugins.kotlin.kapt)
 
-    // ✅ Hilt DI
+    // Hilt DI
     alias(libs.plugins.hilt.android)
 }
 
@@ -38,7 +38,7 @@ android {
     }
 }
 
-/* ✅ KAPT CONFIG (MODULE LEVEL) */
+/*  KAPT CONFIG (MODULE LEVEL) */
 kapt {
     correctErrorTypes = true
 }
@@ -73,4 +73,15 @@ dependencies {
 
     // Icons
     implementation libs.androidx.compose.material.icons.extended
+
+    // RETROFIT ( OpenWeather API)
+    implementation "com.squareup.retrofit2:retrofit:2.10.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.10.0"
+
+    //OKHTTP (Logging for debugging)
+    implementation "com.squareup.okhttp3:okhttp:4.11.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.11.0"
+
+    //GSON (JSON parsing)
+    implementation "com.google.code.gson:gson:2.10.1"
 }

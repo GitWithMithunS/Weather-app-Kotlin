@@ -26,18 +26,33 @@ class CityViewModel @Inject constructor(
 
     private fun loadCities() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            val user = userRepository.getCurrentUser()
-            val username = user?.username ?: return@launch
+                val user = userRepository.getCurrentUser()
+                if (user == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "User not found"
+                    )
+                    return@launch
+                }
 
-            val cities = cityRepository.getCities(username)
+                val cities = cityRepository.getCities(user.username)
 
-            _uiState.value = CityUiState(
-                username = username,
-                cities = cities,
-                isLoading = false
-            )
+                _uiState.value = CityUiState(
+                    username = user.username,
+                    cities = cities,
+                    isLoading = false
+                )
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Error: ${e.message}"
+                )
+            }
         }
     }
 
@@ -48,22 +63,63 @@ class CityViewModel @Inject constructor(
     fun addCity() {
         val state = _uiState.value
 
-        if (state.newCity.isBlank()) return
+        if (state.newCity.isBlank()) {
+            _uiState.value = state.copy(error = "City name cannot be empty")
+            return
+        }
 
         viewModelScope.launch {
-            cityRepository.addCity(
-                cityName = state.newCity,
-                username = state.username
-            )
-            loadCities()
-            _uiState.value = _uiState.value.copy(newCity = "")
+            try {
+                _uiState.value = state.copy(isLoading = true, error = null)
+
+                val success = cityRepository.addCity(
+                    cityName = state.newCity,
+                    username = state.username
+                )
+
+                if (success) {
+                    loadCities()
+                    _uiState.value = _uiState.value.copy(newCity = "")
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Failed to add city"
+                    )
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Error: ${e.message}"
+                )
+            }
         }
     }
 
     fun deleteCity(city: CityEntity) {
         viewModelScope.launch {
-            cityRepository.deleteCity(city)
-            loadCities()
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+                val success = cityRepository.deleteCity(city)
+
+                if (success) {
+                    loadCities()
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Failed to delete city"
+                    )
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Error: ${e.message}"
+                )
+            }
         }
     }
 }

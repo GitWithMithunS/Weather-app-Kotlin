@@ -1,58 +1,118 @@
 package com.example.weatherapp.data.repository
 
-class WeatherRepository {
+import android.util.Log
+import com.example.weatherapp.data.remote.api.OpenWeatherApiService
+import com.example.weatherapp.data.remote.model.CurrentWeatherResponse
+import com.example.weatherapp.data.remote.model.WeatherResponse
+import javax.inject.Inject
+import javax.inject.Singleton
 
-    fun getWeatherDetails(city: String): WeatherDetails {
-        return WeatherDetails(
-            cityName = city,
-            humidity = 75,
-            dewPoint = "18°C",
-            windSpeed = 15,
-            windGust = 25,
-            precipitationChance = 20,
-            precipitationDesc = "Light rain expected",
-            feelsLike = 26,
-            sunrise = "05:30 AM",
-            sunset = "07:45 PM",
-            hourly = listOf(
-                HourlyWeather("10 AM", 25, ""),
-                HourlyWeather("11 AM", 26, ""),
-                HourlyWeather("12 PM", 27, "")
-            ),
-            daily = listOf(
-                DailyWeather("Today", "Sunny", 28, 20, ""),
-                DailyWeather("Tue", "Partly Cloudy", 27, 19, "")
+@Singleton
+class WeatherRepository @Inject constructor(
+    private val apiService: OpenWeatherApiService
+) {
+
+    //my actual api-key
+    private val apiKey = "0b504b7112bc845d63522c31fdc52ea5"
+    private val units = "metric"
+
+
+    /**
+     * Get current weather for a city by name
+     */
+    suspend fun getCurrentWeather(cityName: String): Result<CurrentWeatherResponse> {
+        return try {
+            Log.d("WeatherRepository", "=== getCurrentWeather Called ===")
+            Log.d("WeatherRepository", "City: $cityName")
+
+
+            Log.d("WeatherRepository", "Calling API Service...")
+            val response = apiService.getCurrentWeather(
+                cityName = cityName,
+                apiKey = apiKey,
+                units = units
             )
-        )
+            Log.d("WeatherRepository", " API Response received")
+            Log.d("WeatherRepository", "City: ${response.name}, Temp: ${response.mainWeather.temp}°C")
+            Result.success(response)
+        } catch (e: Exception) {
+            Log.e("WeatherRepository", " getCurrentWeather Error: ${e.message}")
+            Log.e("WeatherRepository", "Error type: ${e.javaClass.simpleName}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get current weather by coordinates
+     */
+    suspend fun getCurrentWeatherByCoordinates(
+        latitude: Double,
+        longitude: Double
+    ): Result<CurrentWeatherResponse> {
+        return try {
+            Log.d("WeatherRepository", "=== getCurrentWeatherByCoordinates Called ===")
+            Log.d("WeatherRepository", "Latitude: $latitude, Longitude: $longitude")
+
+            val response = apiService.getCurrentWeatherByCoordinates(
+                latitude = latitude,
+                longitude = longitude,
+                apiKey = apiKey,
+                units = units
+            )
+            Log.d("WeatherRepository", " API Response received")
+            Result.success(response)
+        } catch (e: Exception) {
+            Log.e("WeatherRepository", " Error: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get 5-day forecast for a city by name
+     */
+    suspend fun getForecast(cityName: String): Result<WeatherResponse> {
+        return try {
+            Log.d("WeatherRepository", "=== getForecast Called ===")
+            Log.d("WeatherRepository", "City: $cityName")
+
+            val response = apiService.getForecast(
+                cityName = cityName,
+                apiKey = apiKey,
+                units = units
+            )
+            Log.d("WeatherRepository", " Forecast received with ${response.list.size} items")
+            Result.success(response)
+        } catch (e: Exception) {
+            Log.e("WeatherRepository", " Forecast Error: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get 5-day forecast by coordinates
+     */
+    suspend fun getForecastByCoordinates(
+        latitude: Double,
+        longitude: Double
+    ): Result<WeatherResponse> {
+        return try {
+            Log.d("WeatherRepository", "=== getForecastByCoordinates Called ===")
+
+            val response = apiService.getForecastByCoordinates(
+                latitude = latitude,
+                longitude = longitude,
+                apiKey = apiKey,
+                units = units
+            )
+            Log.d("WeatherRepository", " Forecast received")
+            Result.success(response)
+        } catch (e: Exception) {
+            Log.e("WeatherRepository", " Error: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
     }
 }
-
-
-data class WeatherDetails(
-    val cityName: String,
-    val humidity: Int,
-    val dewPoint: String,
-    val windSpeed: Int,
-    val windGust: Int,
-    val precipitationChance: Int,
-    val precipitationDesc: String,
-    val feelsLike: Int,
-    val sunrise: String,
-    val sunset: String,
-    val hourly: List<HourlyWeather>,
-    val daily: List<DailyWeather>
-)
-
-data class HourlyWeather(
-    val time: String,
-    val temp: Int,
-    val icon: String
-)
-
-data class DailyWeather(
-    val day: String,
-    val condition: String,
-    val maxTemp: Int,
-    val minTemp: Int,
-    val icon: String
-)

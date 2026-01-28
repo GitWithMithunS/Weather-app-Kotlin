@@ -32,23 +32,55 @@ class LoginViewModel @Inject constructor(
     fun login(onSuccess: () -> Unit) {
         val state = _uiState.value
 
-        if (state.username.isBlank() || state.password.isBlank() || state.city.isBlank()) {
-            _uiState.value = state.copy(error = "All fields are required")
+        // Validation
+        if (state.username.isBlank()) {
+            _uiState.value = state.copy(error = "Username is required")
+            return
+        }
+
+        if (state.password.isBlank()) {
+            _uiState.value = state.copy(error = "Password is required")
+            return
+        }
+
+        if (state.city.isBlank()) {
+            _uiState.value = state.copy(error = "Default city is required")
+            return
+        }
+
+        if (state.password.length < 4) {
+            _uiState.value = state.copy(error = "Password must be at least 4 characters")
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true, error = null)
+            try {
+                _uiState.value = state.copy(isLoading = true, error = null)
 
-            // ✅ Uses saveAndLoginUser to mark the user as active
-            userRepository.saveAndLoginUser(
-                username = state.username,
-                password = state.password,
-                city = state.city
-            )
+                // Try to save and login user
+                val success = userRepository.saveAndLoginUser(
+                    username = state.username,
+                    password = state.password,
+                    city = state.city
+                )
 
-            _uiState.value = state.copy(isLoading = false)
-            onSuccess()
+                if (success) {
+                    _uiState.value = state.copy(isLoading = false)
+                    onSuccess()
+                } else {
+                    _uiState.value = state.copy(
+                        isLoading = false,
+                        error = "Failed to login. Please try again."
+                    )
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = state.copy(
+                    isLoading = false,
+                    error = "Error: ${e.message}"
+                )
+            }
         }
     }
 }

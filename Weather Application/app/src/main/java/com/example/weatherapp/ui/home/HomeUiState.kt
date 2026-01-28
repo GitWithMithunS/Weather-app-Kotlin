@@ -5,6 +5,10 @@ data class HomeUiState(
     val city: String = "",
     val temperature: String = "--",
     val description: String = "",
+    val humidity: String = "--",
+    val windSpeed: String = "--",
+    val feelsLike: String = "--",
     val forecast: List<String> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val error: String? = null
 )
