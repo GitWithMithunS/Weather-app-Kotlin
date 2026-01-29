@@ -1,5 +1,6 @@
 package com.example.weatherapp.ui.details
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,26 +16,36 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.weatherapp.ui.components.AppBottomBar
 import com.example.weatherapp.ui.components.AppTopBar
 import com.example.weatherapp.ui.components.BottomNavItem
+import com.example.weatherapp.ui.util.WeatherIconMapper
 
 @Composable
 fun WeatherDetailsScreen(
     cityName: String,
+    date: String?,
     onBackClick: () -> Unit,
     onHomeClick: () -> Unit,
     onCitiesClick: () -> Unit,
+    onDayClick: (String, String) -> Unit,
     viewModel: WeatherDetailsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(cityName) {
-        viewModel.loadWeather(cityName)
+    LaunchedEffect(cityName, date) {
+        if (date != null) {
+            viewModel.loadWeatherForDate(cityName, date)
+        } else {
+            viewModel.loadWeather(cityName)
+        }
     }
 
     WeatherDetailsContent(
         state = state,
         onBack = onBackClick,
         onHomeClick = onHomeClick,
-        onCitiesClick = onCitiesClick
+        onCitiesClick = onCitiesClick,
+        onDayClick = {
+            onDayClick(cityName, it)
+        }
     )
 }
 
@@ -45,6 +56,7 @@ private fun WeatherDetailsContent(
     onBack: () -> Unit,
     onHomeClick: () -> Unit,
     onCitiesClick: () -> Unit,
+    onDayClick: (String) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -98,6 +110,13 @@ private fun WeatherDetailsContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
 
+                    item {
+                        Text(
+                            text = state.title,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    }
+
                     /* ===== CURRENT WEATHER ===== */
                     item {
                         Card(
@@ -116,7 +135,7 @@ private fun WeatherDetailsContent(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.Cloud,
+                                        imageVector = WeatherIconMapper.getWeatherIcon(state.icon),
                                         contentDescription = null,
                                         modifier = Modifier.size(72.dp),
                                         tint = MaterialTheme.colorScheme.primary
@@ -190,7 +209,7 @@ private fun WeatherDetailsContent(
                                                 Spacer(Modifier.height(4.dp))
 
                                                 Icon(
-                                                    imageVector = Icons.Filled.WbSunny,
+                                                    imageVector = WeatherIconMapper.getWeatherIcon(hour.icon),
                                                     contentDescription = null
                                                 )
 
@@ -256,7 +275,9 @@ private fun WeatherDetailsContent(
                     }
 
                     items(state.dailyForecast) { day ->
-                        Card {
+                        Card(
+                            modifier = Modifier.clickable { onDayClick(day.date) }
+                        ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -266,7 +287,7 @@ private fun WeatherDetailsContent(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Filled.Cloud,
+                                        imageVector = WeatherIconMapper.getWeatherIcon(day.icon),
                                         contentDescription = null,
                                         modifier = Modifier.size(20.dp)
                                     )

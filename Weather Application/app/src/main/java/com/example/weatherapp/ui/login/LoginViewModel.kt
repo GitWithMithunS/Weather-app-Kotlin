@@ -73,7 +73,7 @@ class LoginViewModel @Inject constructor(
                 passwordError = errors["password"],
                 confirmPasswordError = errors["confirmPassword"],
                 cityError = errors["city"],
-                error = "Please fix the errors above"
+                error = "Please enter proper details"
             )
             return
         }
@@ -136,7 +136,7 @@ class LoginViewModel @Inject constructor(
             _uiState.value = state.copy(
                 usernameError = errors["username"],
                 passwordError = errors["password"],
-                error = "Please fix the errors above"
+                error = "Please enter proper details"
             )
             return
         }
@@ -193,6 +193,18 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    private fun getPasswordValidationError(password: String): String? {
+        val hasLetter = password.any { it.isLetter() }
+        val hasDigit = password.any { it.isDigit() }
+        val hasSpecial = password.any { !it.isLetterOrDigit() }
+
+        if (password.length < 8 || !hasLetter || !hasDigit || !hasSpecial) {
+            return "Password must be at least 8 characters and contain a mix of letters, numbers, and special characters."
+        }
+
+        return null
+    }
+
     // Validation functions
     private fun validateRegister(state: LoginUiState): Map<String, String> {
         val errors = mutableMapOf<String, String>()
@@ -207,10 +219,12 @@ class LoginViewModel @Inject constructor(
         }
 
         // Password validation
-        when {
-            state.password.isBlank() -> errors["password"] = "Password is required"
-            state.password.length < 4 -> errors["password"] = "Password must be at least 4 characters"
-            state.password.length > 50 -> errors["password"] = "Password must be less than 50 characters"
+        if (state.password.isBlank()) {
+            errors["password"] = "Password is required"
+        } else {
+            getPasswordValidationError(state.password)?.let {
+                errors["password"] = it
+            }
         }
 
         // Confirm password validation

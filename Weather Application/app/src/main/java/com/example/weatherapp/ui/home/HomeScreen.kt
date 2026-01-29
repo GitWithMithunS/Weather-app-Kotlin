@@ -1,11 +1,11 @@
 package com.example.weatherapp.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,12 +17,14 @@ import com.example.weatherapp.model.ForecastItem
 import com.example.weatherapp.ui.components.AppBottomBar
 import com.example.weatherapp.ui.components.AppTopBar
 import com.example.weatherapp.ui.components.BottomNavItem
+import com.example.weatherapp.ui.util.WeatherIconMapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onCitiesClick: () -> Unit,
     onLogout: () -> Unit,
+    onWeatherClick: (String, String?) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -65,6 +67,11 @@ fun HomeScreen(
             ) {
 
                 item {
+                    Text(
+                        text = state.title,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     // City
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -83,7 +90,9 @@ fun HomeScreen(
                 item {
                     // Weather Card
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onWeatherClick(state.city, null) },
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -96,7 +105,7 @@ fun HomeScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Cloud,
+                                imageVector = WeatherIconMapper.getWeatherIcon(state.icon),
                                 contentDescription = "Weather Icon",
                                 modifier = Modifier.size(72.dp),
                                 tint = MaterialTheme.colorScheme.primary
@@ -124,7 +133,10 @@ fun HomeScreen(
                 }
 
                 items(state.forecast) { day ->
-                    ForecastItemRow(day)
+                    ForecastItemRow(
+                        day = day,
+                        onClick = { onWeatherClick(state.city, day.date) }
+                    )
                 }
             }
         }
@@ -132,8 +144,15 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ForecastItemRow(day: ForecastItem) {
-    Card {
+private fun ForecastItemRow(
+    day: ForecastItem,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -143,7 +162,7 @@ private fun ForecastItemRow(day: ForecastItem) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Filled.Cloud,
+                    imageVector = WeatherIconMapper.getWeatherIcon(day.icon),
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )

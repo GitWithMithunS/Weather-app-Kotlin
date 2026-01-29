@@ -51,10 +51,12 @@ class HomeViewModel @Inject constructor(
                         .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
 
                     ForecastItem(
+                        date = date,
                         day = dayOfWeek,
                         description = first.weather.firstOrNull()?.description ?: "",
                         minTemp = "${minTemp.toInt()}°C",
-                        maxTemp = "${maxTemp.toInt()}°C"
+                        maxTemp = "${maxTemp.toInt()}°C",
+                        icon = first.weather.firstOrNull()?.icon ?: ""
                     )
                 }.take(5)
 
@@ -64,6 +66,7 @@ class HomeViewModel @Inject constructor(
                     city = city,
                     temperature = "${weatherData.mainWeather.temp.toInt()}°C",
                     description = weatherData.weather.firstOrNull()?.main ?: "Unknown",
+                    icon = weatherData.weather.firstOrNull()?.icon ?: "",
                     humidity = "${weatherData.mainWeather.humidity}%",
                     windSpeed = "${weatherData.wind.speed.toInt()} m/s",
                     feelsLike = "${weatherData.mainWeather.feelsLike.toInt()}°C",

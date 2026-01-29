@@ -1,9 +1,11 @@
 package com.example.weatherapp.ui.details
 
 data class WeatherDetailsUiState(
+    val title: String = "",
     val city: String = "",
     val temperature: String = "",
     val description: String = "",
+    val icon: String = "",
     val humidity: String = "",
     val wind: String = "",
     val feelsLike: String = "",
@@ -30,5 +32,6 @@ data class DailyForecast(
     val maxTemp: String,
     val minTemp: String,
     val description: String,
-    val icon: String
+    val icon: String,
+    val date: String
 )
