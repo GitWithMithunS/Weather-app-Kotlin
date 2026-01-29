@@ -36,9 +36,6 @@ fun AppNavGraph(
 
         composable(Routes.HOME) {
             HomeScreen(
-                onCityClick = {
-                    navController.navigate("${Routes.DETAILS}/$it")
-                },
                 onCitiesClick = {
                     navController.navigate(Routes.CITIES)
                 },

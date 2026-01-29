@@ -1,5 +1,7 @@
 package com.example.weatherapp.ui.home
 
+import com.example.weatherapp.model.ForecastItem
+
 data class HomeUiState(
     val username: String = "",
     val city: String = "",
@@ -8,7 +10,7 @@ data class HomeUiState(
     val humidity: String = "--",
     val windSpeed: String = "--",
     val feelsLike: String = "--",
-    val forecast: List<String> = emptyList(),
+    val forecast: List<ForecastItem> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null
 )
