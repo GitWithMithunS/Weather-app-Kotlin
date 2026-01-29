@@ -1,9 +1,5 @@
 package com.example.weatherapp.ui.details
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.WeatherRepository
@@ -23,132 +19,197 @@ class WeatherDetailsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(WeatherDetailsUiState())
     val uiState: StateFlow<WeatherDetailsUiState> = _uiState
 
-    private var rawMainTemp: Double = 0.0
-    private var rawFeelsLike: Double = 0.0
-
-    // NEW: Helper to get Icon based on description
-    fun getWeatherIcon(description: String): ImageVector {
-        return when (description.lowercase()) {
-            "clear" -> Icons.Default.WbSunny
-            "haze", "mist", "fog" -> Icons.Default.CloudQueue
-            "clouds" -> Icons.Default.Cloud
-            "rain", "drizzle" -> Icons.Default.Umbrella
-            "thunderstorm" -> Icons.Default.FlashOn
-            "snow" -> Icons.Default.AcUnit
-            else -> Icons.Default.WbCloudy
-        }
-    }
-
-    // NEW: Helper to get Color based on description
-    fun getWeatherColor(description: String): Color {
-        return when (description.lowercase()) {
-            "clear" -> Color(0xFFFFD700) // Gold
-            "clouds" -> Color.Gray
-            "haze", "mist", "fog" -> Color(0xFFB0C4DE) // Light Steel Blue
-            "rain", "drizzle" -> Color(0xFF4682B4) // Steel Blue
-            else -> Color(0xFF81D4FA) // Light Blue
-        }
-    }
-
-    fun toggleUnit() {
-        val newIsFahrenheit = !_uiState.value.isFahrenheit
-        updateDisplayUnits(newIsFahrenheit)
-    }
-
-    private fun updateDisplayUnits(isFahrenheit: Boolean) {
-        val unit = if (isFahrenheit) "°F" else "°C"
-        fun convert(c: Double) = if (isFahrenheit) (c * 9/5 + 32).toInt() else c.toInt()
-
-        val updatedHourly = _uiState.value.hourlyData.map {
-            it.copy(temperature = "${convert(it.rawTemp)}$unit")
-        }
-
-        val updatedDaily = _uiState.value.dailyForecast.map {
-            it.copy(
-                maxTemp = "${convert(it.rawMax)}$unit",
-                minTemp = "${convert(it.rawMin)}$unit"
-            )
-        }
-
-        _uiState.value = _uiState.value.copy(
-            isFahrenheit = isFahrenheit,
-            temperature = "${convert(rawMainTemp)}$unit",
-            feelsLike = "${convert(rawFeelsLike)}$unit",
-            hourlyData = updatedHourly,
-            dailyForecast = updatedDaily
-        )
-    }
-
     fun loadWeather(city: String) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+                // Fetch current weather
                 val currentWeatherResult = weatherRepository.getCurrentWeather(city)
+
+                if (!currentWeatherResult.isSuccess) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Failed to fetch current weather"
+                    )
+                    return@launch
+                }
+
+                val currentWeather = currentWeatherResult.getOrNull() ?: return@launch
+
+                // Fetch forecast
                 val forecastResult = weatherRepository.getForecast(city)
+                var hourlyData = emptyList<HourlyForecast>()
+                var dailyForecast = emptyList<DailyForecast>()
 
-                if (currentWeatherResult.isSuccess) {
-                    val currentWeather = currentWeatherResult.getOrNull()!!
-                    rawMainTemp = currentWeather.mainWeather.temp
-                    rawFeelsLike = currentWeather.mainWeather.feelsLike
-
-                    var hourlyData = emptyList<HourlyForecast>()
-                    var dailyForecast = emptyList<DailyForecast>()
-
-                    if (forecastResult.isSuccess) {
-                        val forecast = forecastResult.getOrNull()!!
+                if (forecastResult.isSuccess) {
+                    val forecast = forecastResult.getOrNull()
+                    if (forecast != null) {
                         hourlyData = forecast.list.take(8).map { item ->
-                            val desc = item.weather.firstOrNull()?.main ?: "Unknown"
                             HourlyForecast(
-                                time = formatTime(item.dt),
+                                time = formatTime(item.dateText),
                                 temperature = "${item.mainWeather.temp.toInt()}°C",
-                                rawTemp = item.mainWeather.temp,
-                                description = desc,
+                                description = item.weather.firstOrNull()?.main ?: "Unknown",
                                 icon = item.weather.firstOrNull()?.icon ?: ""
                             )
                         }
 
-                        val dailyMap = mutableMapOf<String, DailyForecast>()
-                        forecast.list.forEach { item ->
-                            val day = formatDate(item.dt)
-                            if (!dailyMap.containsKey(day)) {
-                                dailyMap[day] = DailyForecast(
-                                    day = day,
-                                    maxTemp = "${item.mainWeather.tempMax.toInt()}°C",
-                                    minTemp = "${item.mainWeather.tempMin.toInt()}°C",
-                                    rawMax = item.mainWeather.tempMax,
-                                    rawMin = item.mainWeather.tempMin,
-                                    description = item.weather.firstOrNull()?.main ?: "Unknown",
-                                    icon = item.weather.firstOrNull()?.icon ?: ""
-                                )
-                            }
-                        }
-                        dailyForecast = dailyMap.values.toList().take(5)
-                    }
+                        // Group by day for daily forecast
+                        dailyForecast = forecast.list.groupBy {
+                            it.dateText.substringBefore(" ")
+                        }.mapNotNull { (date, forecasts) ->
+                            val first = forecasts.first()
+                            val minTemp = forecasts.minOf { it.mainWeather.tempMin }
+                            val maxTemp = forecasts.maxOf { it.mainWeather.tempMax }
+                            val dayOfWeek = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
 
-                    _uiState.value = WeatherDetailsUiState(
-                        city = currentWeather.name,
-                        temperature = "${rawMainTemp.toInt()}°C",
-                        description = currentWeather.weather.firstOrNull()?.main ?: "Unknown",
-                        humidity = "${currentWeather.mainWeather.humidity}%",
-                        wind = "${currentWeather.wind.speed.toInt()} m/s",
-                        feelsLike = "${rawFeelsLike.toInt()}°C",
-                        visibility = "${(currentWeather.visibility / 1000).toInt()} km",
-                        pressure = "${currentWeather.mainWeather.pressure} hPa",
-                        cloudiness = "${currentWeather.clouds.all}%",
-                        sunrise = formatTime(currentWeather.sysInfo.sunrise),
-                        sunset = formatTime(currentWeather.sysInfo.sunset),
-                        hourlyData = hourlyData,
-                        dailyForecast = dailyForecast,
-                        isLoading = false,
-                        isFahrenheit = false
-                    )
+                            DailyForecast(
+                                day = dayOfWeek,
+                                description = first.weather.firstOrNull()?.description ?: "",
+                                minTemp = "${minTemp.toInt()}°C",
+                                maxTemp = "${maxTemp.toInt()}°C",
+                                icon = first.weather.firstOrNull()?.icon ?: "",
+                                date = date
+                            )
+                        }.take(5)
+                    }
                 }
+
+                // Convert timestamps to readable format
+                val sunriseTime = formatTime(currentWeather.sysInfo.sunrise)
+                val sunsetTime = formatTime(currentWeather.sysInfo.sunset)
+
+                _uiState.value = WeatherDetailsUiState(
+                    title = "Today",
+                    city = currentWeather.name,
+                    temperature = "${currentWeather.mainWeather.temp.toInt()}°C",
+                    description = currentWeather.weather.firstOrNull()?.main ?: "Unknown",
+                    icon = currentWeather.weather.firstOrNull()?.icon ?: "",
+                    humidity = "${currentWeather.mainWeather.humidity}%",
+                    wind = "${currentWeather.wind.speed.toInt()} m/s",
+                    feelsLike = "${currentWeather.mainWeather.feelsLike.toInt()}°C",
+                    visibility = "${(currentWeather.visibility / 1000).toInt()} km",
+                    pressure = "${currentWeather.mainWeather.pressure} hPa",
+                    cloudiness = "${currentWeather.clouds.all}%",
+                    sunrise = sunriseTime,
+                    sunset = sunsetTime,
+                    hourlyData = hourlyData,
+                    dailyForecast = dailyForecast,
+                    isLoading = false
+                )
+
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Error: ${e.message}"
+                )
             }
         }
     }
 
-    private fun formatTime(timestamp: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp * 1000))
-    private fun formatDate(timestamp: Long): String = SimpleDateFormat("EEE", Locale.getDefault()).format(Date(timestamp * 1000))
+    fun loadWeatherForDate(city: String, date: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+                val forecastResult = weatherRepository.getForecast(city)
+                val forecastData = forecastResult.getOrThrow()
+
+                val forecastsForDate = forecastData.list.filter {
+                    it.dateText.startsWith(date)
+                }
+
+                if (forecastsForDate.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = "No data for selected date")
+                    return@launch
+                }
+
+                val firstData = forecastsForDate.first()
+
+                val hourlyData = forecastsForDate.map {
+                    HourlyForecast(
+                        time = formatTime(it.dateText),
+                        temperature = "${it.mainWeather.temp.toInt()}°C",
+                        description = it.weather.firstOrNull()?.description ?: "",
+                        icon = it.weather.firstOrNull()?.icon ?: ""
+                    )
+                }
+
+                val dailyForecasts = forecastData.list.groupBy {
+                    it.dateText.substringBefore(" ")
+                }.mapNotNull { (date, forecasts) ->
+                    val first = forecasts.first()
+                    val minTemp = forecasts.minOf { it.mainWeather.tempMin }
+                    val maxTemp = forecasts.maxOf { it.mainWeather.tempMax }
+                    val dayOfWeek = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
+
+                    DailyForecast(
+                        day = dayOfWeek,
+                        description = first.weather.firstOrNull()?.description ?: "",
+                        minTemp = "${minTemp.toInt()}°C",
+                        maxTemp = "${maxTemp.toInt()}°C",
+                        icon = first.weather.firstOrNull()?.icon ?: "",
+                        date = date
+                    )
+                }.take(5)
+
+                val sunriseTime = formatTime(forecastData.city.sunrise)
+                val sunsetTime = formatTime(forecastData.city.sunset)
+                val dayOfWeek = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .parse(date)?.let { SimpleDateFormat("EEEE", Locale.getDefault()).format(it) } ?: ""
+
+                _uiState.value = WeatherDetailsUiState(
+                    title = dayOfWeek,
+                    city = city,
+                    temperature = "${firstData.mainWeather.temp.toInt()}°C",
+                    description = firstData.weather.firstOrNull()?.description ?: "",
+                    icon = firstData.weather.firstOrNull()?.icon ?: "",
+                    humidity = "${firstData.mainWeather.humidity}%",
+                    wind = "${firstData.wind.speed.toInt()} m/s",
+                    feelsLike = "${firstData.mainWeather.feelsLike.toInt()}°C",
+                    visibility = "${(firstData.visibility / 1000)} km",
+                    pressure = "${firstData.mainWeather.pressure} hPa",
+                    cloudiness = "${firstData.clouds.all}%",
+                    sunrise = sunriseTime,
+                    sunset = sunsetTime,
+                    hourlyData = hourlyData,
+                    dailyForecast = dailyForecasts,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "An unknown error occurred"
+                )
+            }
+        }
+    }
+
+    private fun formatTime(timestamp: Long): String {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp * 1000
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return format.format(calendar.time)
+    }
+
+    private fun formatTime(dateString: String): String {
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val date = inputFormat.parse(dateString)
+            val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            date?.let { outputFormat.format(it) } ?: dateString.substringAfter(" ").substringBeforeLast(":")
+        } catch (e: Exception) {
+            dateString.substringAfter(" ").substringBeforeLast(":")
+        }
+    }
+
+    private fun formatDateToDay(timestamp: Long): String {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp * 1000
+        val format = SimpleDateFormat("EEE", Locale.getDefault())
+        return format.format(calendar.time)
+    }
 }

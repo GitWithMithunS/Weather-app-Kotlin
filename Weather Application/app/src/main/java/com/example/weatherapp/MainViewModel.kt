@@ -1,6 +1,5 @@
 package com.example.weatherapp
 
-import androidx.glance.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.UserRepository
@@ -21,6 +20,7 @@ class MainViewModel @Inject constructor(
     init {
         loadCurrentUser()
     }
+
     private fun loadCurrentUser() {
         viewModelScope.launch {
             try {
