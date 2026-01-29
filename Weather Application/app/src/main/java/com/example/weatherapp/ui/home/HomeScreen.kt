@@ -1,30 +1,32 @@
 package com.example.weatherapp.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.weatherapp.model.ForecastItem
 import com.example.weatherapp.ui.components.AppBottomBar
 import com.example.weatherapp.ui.components.AppTopBar
 import com.example.weatherapp.ui.components.BottomNavItem
-import com.example.weatherapp.ui.util.WeatherIconMapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onCityClick: (String) -> Unit,
     onCitiesClick: () -> Unit,
     onLogout: () -> Unit,
-    onWeatherClick: (String, String?) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -34,109 +36,115 @@ fun HomeScreen(
             AppTopBar(
                 username = state.username,
                 showLogout = true,
-                onLogoutClick = {
-                    viewModel.logout(onLogout)
-                }
+                onLogoutClick = { viewModel.logout(onLogout) }
             )
         },
         bottomBar = {
             AppBottomBar(
                 selectedItem = BottomNavItem.HOME,
-                onHomeClick = {},
+                onHomeClick = { /* Already on Home */ },
                 onCitiesClick = onCitiesClick
             )
         }
     ) { padding ->
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-
-                item {
-                    Text(
-                        text = state.title,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    // City
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.LocationOn,
-                            contentDescription = "Location",
-                            tint = MaterialTheme.colorScheme.primary
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.surface
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                    )
+                )
+                .padding(padding)
+        ) {
+            if (state.isLoading) {
+                CircularProgressIndicator(Modifier.align(Alignment.Center))
+            } else {
+                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+
+                    // City Name and Segmented Unit Picker
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = state.city,
-                            style = MaterialTheme.typography.titleLarge
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                }
 
-                item {
-                    // Weather Card
+                        // --- UPDATED: Segmented Unit Picker ---
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(4.dp)
+                            ) {
+                                UnitOption(
+                                    label = "°C",
+                                    isSelected = !state.isFahrenheit,
+                                    onClick = { if (state.isFahrenheit) viewModel.toggleUnit() }
+                                )
+                                UnitOption(
+                                    label = "°F",
+                                    isSelected = state.isFahrenheit,
+                                    onClick = { if (!state.isFahrenheit) viewModel.toggleUnit() }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // Main Weather Card
                     Card(
-                        modifier = Modifier
+                        Modifier
                             .fillMaxWidth()
-                            .clickable { onWeatherClick(state.city, null) },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
+                            .shadow(12.dp, RoundedCornerShape(24.dp)),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
+                            Modifier.padding(32.dp).fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                imageVector = WeatherIconMapper.getWeatherIcon(state.icon),
-                                contentDescription = "Weather Icon",
-                                modifier = Modifier.size(72.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = state.temperature,
-                                style = MaterialTheme.typography.displayLarge
+                                style = MaterialTheme.typography.displayLarge,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = state.description,
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(0.8f)
                             )
                         }
                     }
-                }
 
-                item {
-                    // Forecast Title
+                    Spacer(Modifier.height(24.dp))
+
                     Text(
                         text = "5-Day Forecast",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
-                }
 
-                items(state.forecast) { day ->
-                    ForecastItemRow(
-                        day = day,
-                        onClick = { onWeatherClick(state.city, day.date) }
-                    )
+                    LazyColumn(
+                        Modifier.weight(1f).padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(state.forecast) { day ->
+                            ForecastItem(text = day)
+                        }
+                    }
                 }
             }
         }
@@ -144,38 +152,36 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ForecastItemRow(
-    day: ForecastItem,
-    onClick: () -> Unit
-) {
-    Card(
+fun UnitOption(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
+            .fillMaxHeight()
+            .width(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = WeatherIconMapper.getWeatherIcon(day.icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Column {
-                    Text(day.day)
-                    Text(
-                        day.description,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-            Text("${day.maxTemp} / ${day.minTemp}")
-        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun WeatherForecastRow(text: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }

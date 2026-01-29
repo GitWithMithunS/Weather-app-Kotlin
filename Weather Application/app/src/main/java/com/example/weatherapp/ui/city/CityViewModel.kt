@@ -20,16 +20,8 @@ class CityViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CityUiState())
     val uiState: StateFlow<CityUiState> = _uiState
 
-    private val recommendedCities = listOf(
-        // Indian Cities
-        "Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata",
-        // Foreign Cities
-        "New York", "London", "Tokyo", "Paris", "Sydney"
-    )
-
     init {
         loadCities()
-        _uiState.value = _uiState.value.copy(recommendedCities = recommendedCities)
     }
 
     private fun loadCities() {
@@ -48,7 +40,7 @@ class CityViewModel @Inject constructor(
 
                 val cities = cityRepository.getCities(user.username)
 
-                _uiState.value = _uiState.value.copy(
+                _uiState.value = CityUiState(
                     username = user.username,
                     cities = cities,
                     isLoading = false
@@ -68,10 +60,10 @@ class CityViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(newCity = value)
     }
 
-    fun addCity(cityName: String) {
+    fun addCity() {
         val state = _uiState.value
 
-        if (cityName.isBlank()) {
+        if (state.newCity.isBlank()) {
             _uiState.value = state.copy(error = "City name cannot be empty")
             return
         }
@@ -80,13 +72,20 @@ class CityViewModel @Inject constructor(
             try {
                 _uiState.value = state.copy(isLoading = true, error = null)
 
-                cityRepository.addCity(
-                    cityName = cityName,
+                val success = cityRepository.addCity(
+                    cityName = state.newCity,
                     username = state.username
                 )
 
-                loadCities()
-                _uiState.value = _uiState.value.copy(newCity = "")
+                if (success) {
+                    loadCities()
+                    _uiState.value = _uiState.value.copy(newCity = "")
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Failed to add city"
+                    )
+                }
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -103,9 +102,16 @@ class CityViewModel @Inject constructor(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-                cityRepository.deleteCity(city)
+                val success = cityRepository.deleteCity(city)
 
-                loadCities()
+                if (success) {
+                    loadCities()
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Failed to delete city"
+                    )
+                }
 
             } catch (e: Exception) {
                 e.printStackTrace()

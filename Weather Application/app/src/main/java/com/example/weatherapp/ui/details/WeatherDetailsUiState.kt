@@ -1,11 +1,9 @@
 package com.example.weatherapp.ui.details
 
 data class WeatherDetailsUiState(
-    val title: String = "",
     val city: String = "",
     val temperature: String = "",
     val description: String = "",
-    val icon: String = "",
     val humidity: String = "",
     val wind: String = "",
     val feelsLike: String = "",
@@ -17,12 +15,14 @@ data class WeatherDetailsUiState(
     val hourlyData: List<HourlyForecast> = emptyList(),
     val dailyForecast: List<DailyForecast> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val isFahrenheit: Boolean = false // New: Track unit
 )
 
 data class HourlyForecast(
     val time: String,
     val temperature: String,
+    val rawTemp: Double, // New: Store raw number
     val description: String,
     val icon: String
 )
@@ -31,7 +31,8 @@ data class DailyForecast(
     val day: String,
     val maxTemp: String,
     val minTemp: String,
+    val rawMax: Double, // New: Store raw number
+    val rawMin: Double, // New: Store raw number
     val description: String,
-    val icon: String,
-    val date: String
+    val icon: String
 )

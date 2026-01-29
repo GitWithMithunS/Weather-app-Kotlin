@@ -5,13 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.UserRepository
 import com.example.weatherapp.data.repository.WeatherRepository
-import com.example.weatherapp.model.ForecastItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,74 +20,64 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
-    init {
-        loadHomeData()
+    // Store raw values to prevent rounding errors during repeated conversions
+    private var lastCelsiusTemp: Double = 0.0
+    private var lastForecastCelsius: List<Double> = emptyList()
+
+    init { loadHomeData() }
+
+    fun toggleUnit() {
+        val newIsFahrenheit = !_uiState.value.isFahrenheit
+        val unitLabel = if (newIsFahrenheit) "°F" else "°C"
+
+        // Convert Main Temp
+        val convertedTemp = if (newIsFahrenheit) (lastCelsiusTemp * 9/5) + 32 else lastCelsiusTemp
+
+        // Convert Forecast List
+        val updatedForecast = _uiState.value.forecast.mapIndexed { index, currentString ->
+            val tempC = lastForecastCelsius.getOrNull(index) ?: 0.0
+            val converted = if (newIsFahrenheit) (tempC * 9/5) + 32 else tempC
+            val parts = currentString.split(" - ")
+            "${parts[0]} - ${converted.toInt()}$unitLabel - ${parts.last()}"
+        }
+
+        _uiState.value = _uiState.value.copy(
+            isFahrenheit = newIsFahrenheit,
+            temperature = "${convertedTemp.toInt()}$unitLabel",
+            forecast = updatedForecast
+        )
     }
 
     private fun loadHomeData() {
         viewModelScope.launch {
-            try {
-                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val user = userRepository.getCurrentUser() ?: return@launch
 
-                val user = userRepository.getCurrentUser() ?: throw Exception("User not found")
-                val city = user.defaultCity
+            val weatherResult = weatherRepository.getCurrentWeather(user.defaultCity)
+            val forecastResult = weatherRepository.getForecast(user.defaultCity)
 
-                val weatherResult = weatherRepository.getCurrentWeather(city)
-                val weatherData = weatherResult.getOrThrow()
+            if (weatherResult.isSuccess && forecastResult.isSuccess) {
+                val weather = weatherResult.getOrNull()!!
+                val forecastData = forecastResult.getOrNull()!!
 
-                val forecastResult = weatherRepository.getForecast(city)
-                val forecastData = forecastResult.getOrThrow()
-
-                val dailyForecasts = forecastData.list.groupBy {
-                    it.dateText.substringBefore(" ")
-                }.mapNotNull { (date, forecasts) ->
-                    val first = forecasts.first()
-                    val minTemp = forecasts.minOf { it.mainWeather.tempMin }
-                    val maxTemp = forecasts.maxOf { it.mainWeather.tempMax }
-                    val dayOfWeek = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
-
-                    ForecastItem(
-                        date = date,
-                        day = dayOfWeek,
-                        description = first.weather.firstOrNull()?.description ?: "",
-                        minTemp = "${minTemp.toInt()}°C",
-                        maxTemp = "${maxTemp.toInt()}°C",
-                        icon = first.weather.firstOrNull()?.icon ?: ""
-                    )
-                }.take(5)
-
+                lastCelsiusTemp = weather.mainWeather.temp
+                lastForecastCelsius = forecastData.list.take(5).map { it.mainWeather.temp }
 
                 _uiState.value = HomeUiState(
                     username = user.username,
-                    city = city,
-                    temperature = "${weatherData.mainWeather.temp.toInt()}°C",
-                    description = weatherData.weather.firstOrNull()?.main ?: "Unknown",
-                    icon = weatherData.weather.firstOrNull()?.icon ?: "",
-                    humidity = "${weatherData.mainWeather.humidity}%",
-                    windSpeed = "${weatherData.wind.speed.toInt()} m/s",
-                    feelsLike = "${weatherData.mainWeather.feelsLike.toInt()}°C",
-                    forecast = dailyForecasts,
+                    city = user.defaultCity,
+                    temperature = "${lastCelsiusTemp.toInt()}°C",
+                    description = weather.weather.firstOrNull()?.main ?: "",
+                    forecast = forecastData.list.take(5).mapIndexed { i, item ->
+                        "${item.dateText.split(" ")[0]} - ${lastForecastCelsius[i].toInt()}°C - ${item.weather.firstOrNull()?.main}"
+                    },
                     isLoading = false
-                )
-
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "An unknown error occurred"
                 )
             }
         }
     }
 
     fun logout(onComplete: () -> Unit) {
-        viewModelScope.launch {
-            userRepository.logout()
-            onComplete()
-        }
-    }
-
-    fun refreshWeather() {
-        loadHomeData()
+        viewModelScope.launch { userRepository.logout(); onComplete() }
     }
 }
