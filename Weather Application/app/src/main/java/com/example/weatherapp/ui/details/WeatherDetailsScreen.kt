@@ -11,11 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.weatherapp.ui.components.AppBottomBar
 import com.example.weatherapp.ui.components.AppTopBar
 import com.example.weatherapp.ui.components.BottomNavItem
+import com.example.weatherapp.ui.home.TemperatureToggle
 import com.example.weatherapp.ui.util.WeatherIconMapper
 
 @Composable
@@ -45,7 +47,8 @@ fun WeatherDetailsScreen(
         onCitiesClick = onCitiesClick,
         onDayClick = {
             onDayClick(cityName, it)
-        }
+        },
+        onToggleTemperature = viewModel::toggleTemperatureUnit
     )
 }
 
@@ -56,7 +59,8 @@ private fun WeatherDetailsContent(
     onBack: () -> Unit,
     onHomeClick: () -> Unit,
     onCitiesClick: () -> Unit,
-    onDayClick: (String) -> Unit
+    onDayClick: (String) -> Unit,
+    onToggleTemperature: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -111,10 +115,17 @@ private fun WeatherDetailsContent(
                 ) {
 
                     item {
-                        Text(
-                            text = state.title,
-                            style = MaterialTheme.typography.headlineMedium
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = state.title,
+                                style = MaterialTheme.typography.headlineMedium
+                            )
+                            TemperatureToggle(isFahrenheit = state.isFahrenheit, onToggle = onToggleTemperature)
+                        }
                     }
 
                     /* ===== CURRENT WEATHER ===== */
@@ -138,7 +149,7 @@ private fun WeatherDetailsContent(
                                         imageVector = WeatherIconMapper.getWeatherIcon(state.icon),
                                         contentDescription = null,
                                         modifier = Modifier.size(72.dp),
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = WeatherIconMapper.getIconColor(state.icon)
                                     )
 
                                     Spacer(Modifier.height(12.dp))
@@ -210,7 +221,8 @@ private fun WeatherDetailsContent(
 
                                                 Icon(
                                                     imageVector = WeatherIconMapper.getWeatherIcon(hour.icon),
-                                                    contentDescription = null
+                                                    contentDescription = null,
+                                                    tint = WeatherIconMapper.getIconColor(hour.icon)
                                                 )
 
                                                 Spacer(Modifier.height(4.dp))
@@ -255,12 +267,14 @@ private fun WeatherDetailsContent(
                                 SunInfo(
                                     title = "Sunrise",
                                     time = state.sunrise,
-                                    icon = Icons.Filled.WbSunny
+                                    icon = Icons.Filled.WbSunny,
+                                    tint = Color(0xFFFFC107) // Sunny yellow
                                 )
                                 SunInfo(
                                     title = "Sunset",
                                     time = state.sunset,
-                                    icon = Icons.Filled.LightMode
+                                    icon = Icons.Filled.LightMode,
+                                    tint = Color(0xFFFFC107) // Sunny yellow
                                 )
                             }
                         }
@@ -289,7 +303,8 @@ private fun WeatherDetailsContent(
                                     Icon(
                                         imageVector = WeatherIconMapper.getWeatherIcon(day.icon),
                                         contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(20.dp),
+                                        tint = WeatherIconMapper.getIconColor(day.icon)
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Column {
@@ -333,7 +348,7 @@ private fun StatsGrid(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard("Cloudiness", cloudiness, Icons.Filled.Cloud, Modifier.weight(1f))
+            StatCard("Cloudiness", cloudiness, Icons.Filled.Cloud, Modifier.weight(1f), iconTint = Color(0xFF81D4FA))
         }
     }
 }
@@ -343,12 +358,13 @@ private fun StatCard(
     title: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconTint: Color = Color.Unspecified
 ) {
     Card(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = iconTint)
                 Spacer(Modifier.width(6.dp))
                 Text(title, style = MaterialTheme.typography.bodySmall)
             }
@@ -366,10 +382,11 @@ private fun StatCard(
 private fun SunInfo(
     title: String,
     time: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color = Color.Unspecified
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, contentDescription = null)
+        Icon(icon, contentDescription = null, tint = tint)
         Spacer(Modifier.height(4.dp))
         Text(title, style = MaterialTheme.typography.bodySmall)
         Text(time, style = MaterialTheme.typography.titleMedium)

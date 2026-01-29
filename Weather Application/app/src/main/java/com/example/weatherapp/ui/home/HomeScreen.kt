@@ -67,10 +67,17 @@ fun HomeScreen(
             ) {
 
                 item {
-                    Text(
-                        text = state.title,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = state.title,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        TemperatureToggle(isFahrenheit = state.isFahrenheit, onToggle = viewModel::toggleTemperatureUnit)
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     // City
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -108,7 +115,7 @@ fun HomeScreen(
                                 imageVector = WeatherIconMapper.getWeatherIcon(state.icon),
                                 contentDescription = "Weather Icon",
                                 modifier = Modifier.size(72.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = WeatherIconMapper.getIconColor(state.icon)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
@@ -144,6 +151,24 @@ fun HomeScreen(
 }
 
 @Composable
+fun TemperatureToggle(isFahrenheit: Boolean, onToggle: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text("", color = if (isFahrenheit) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary)
+        Switch(
+            checked = isFahrenheit,
+            onCheckedChange = { onToggle() },
+            thumbContent = {
+                Text(if (isFahrenheit) "F" else "C")
+            }
+        )
+        Text("", color = if (!isFahrenheit) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
 private fun ForecastItemRow(
     day: ForecastItem,
     onClick: () -> Unit
@@ -164,7 +189,8 @@ private fun ForecastItemRow(
                 Icon(
                     imageVector = WeatherIconMapper.getWeatherIcon(day.icon),
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
+                    tint = WeatherIconMapper.getIconColor(day.icon)
                 )
                 Spacer(Modifier.width(8.dp))
                 Column {

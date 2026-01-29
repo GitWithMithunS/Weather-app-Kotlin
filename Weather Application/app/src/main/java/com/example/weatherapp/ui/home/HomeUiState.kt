@@ -13,6 +13,7 @@ data class HomeUiState(
     val windSpeed: String = "--",
     val feelsLike: String = "--",
     val forecast: List<ForecastItem> = emptyList(),
+    val isFahrenheit: Boolean = false,
     val isLoading: Boolean = true,
     val error: String? = null
 )

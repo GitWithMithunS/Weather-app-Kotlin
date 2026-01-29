@@ -16,6 +16,7 @@ data class WeatherDetailsUiState(
     val sunset: String = "",
     val hourlyData: List<HourlyForecast> = emptyList(),
     val dailyForecast: List<DailyForecast> = emptyList(),
+    val isFahrenheit: Boolean = false,
     val isLoading: Boolean = true,
     val error: String? = null
 )
