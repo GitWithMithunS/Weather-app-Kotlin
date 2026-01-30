@@ -3,7 +3,9 @@ package com.example.weatherapp.ui.city
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -26,6 +28,7 @@ fun CityListScreen(
     viewModel: CityViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
 
     Scaffold(
         topBar = {
@@ -44,50 +47,87 @@ fun CityListScreen(
         }
     ) { padding ->
 
-        Column(
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            OutlinedTextField(
-                value = state.newCity,
-                onValueChange = viewModel::onCityNameChange,
-                label = { Text("Add City") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = viewModel::addCity,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Add City")
+            item {
+                OutlinedTextField(
+                    value = state.newCity,
+                    onValueChange = viewModel::onCityNameChange,
+                    label = { Text("Add City") },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            item {
+                Button(
+                    onClick = { viewModel.addCity(state.newCity) },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    CircularProgressIndicator()
+                    Text("Add City")
                 }
-            } else {
-                LazyColumn {
-                    items(state.cities) { city ->
-                        CityItem(
-                            city = city,
-                            onClick = { onCityClick(city.cityName) },
-                            onDelete = { viewModel.deleteCity(city) }
-                        )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Popular Cities", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.recommendedCities) { city ->
+                        Chip(city, onClick = { viewModel.addCity(city) })
                     }
                 }
             }
+            
+            item {
+                 Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            if (state.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else {
+                items(state.cities) { city ->
+                    CityItem(
+                        city = city,
+                        onClick = { onCityClick(city.cityName) },
+                        onDelete = { viewModel.deleteCity(city) }
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun Chip(text: String, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 
