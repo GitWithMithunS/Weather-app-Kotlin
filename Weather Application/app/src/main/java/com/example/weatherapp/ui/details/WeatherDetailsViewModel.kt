@@ -77,7 +77,7 @@ class WeatherDetailsViewModel @Inject constructor(
                         icon = currentWeather.weather.firstOrNull()?.icon ?: "",
                         humidity = "${currentWeather.mainWeather.humidity}%",
                         wind = "${currentWeather.wind.speed.toInt()} m/s",
-                        visibility = "${(currentWeather.visibility / 1000).toInt()} km",
+                        visibility = "${currentWeather.visibility / 1000} km",
                         pressure = "${currentWeather.mainWeather.pressure} hPa",
                         cloudiness = "${currentWeather.clouds.all}%",
                         sunrise = formatTime(currentWeather.sysInfo.sunrise),
@@ -154,7 +154,7 @@ class WeatherDetailsViewModel @Inject constructor(
                         icon = firstData.weather.firstOrNull()?.icon ?: "",
                         humidity = "${firstData.mainWeather.humidity}%",
                         wind = "${firstData.wind.speed.toInt()} m/s",
-                        visibility = "${(firstData.visibility / 1000)} km",
+                        visibility = "${firstData.visibility / 1000} km",
                         pressure = "${firstData.mainWeather.pressure} hPa",
                         cloudiness = "${firstData.clouds.all}%",
                         sunrise = formatTime(forecastData.city.sunrise),
@@ -204,7 +204,7 @@ class WeatherDetailsViewModel @Inject constructor(
     private fun formatTime(timestamp: Long): String {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = timestamp * 1000
-        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val format = SimpleDateFormat("hh:mm a", Locale.getDefault())
         return format.format(calendar.time)
     }
 
@@ -212,17 +212,10 @@ class WeatherDetailsViewModel @Inject constructor(
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val date = inputFormat.parse(dateString)
-            val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
             date?.let { outputFormat.format(it) } ?: dateString.substringAfter(" ").substringBeforeLast(":")
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             dateString.substringAfter(" ").substringBeforeLast(":")
         }
-    }
-
-    private fun formatDateToDay(timestamp: Long): String {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp * 1000
-        val format = SimpleDateFormat("EEE", Locale.getDefault())
-        return format.format(calendar.time)
     }
 }
