@@ -1,10 +1,12 @@
 package com.example.weatherapp.ui.login
 
+import androidx.compose.ui.text.input.TextFieldValue
+
 data class LoginUiState(
-    val username: String = "",
-    val password: String = "",
-    val city: String = "",
-    val confirmPassword: String = "",
+    val username: TextFieldValue = TextFieldValue(),
+    val password: TextFieldValue = TextFieldValue(),
+    val city: TextFieldValue = TextFieldValue(),
+    val confirmPassword: TextFieldValue = TextFieldValue(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val isRegisterMode: Boolean = false,  // Toggle between login and register

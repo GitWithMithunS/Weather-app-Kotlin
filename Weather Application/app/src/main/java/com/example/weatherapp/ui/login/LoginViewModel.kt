@@ -1,6 +1,7 @@
 package com.example.weatherapp.ui.login
 
 import android.util.Log
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.UserRepository
@@ -18,28 +19,28 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
 
-    fun onUsernameChange(value: String) {
+    fun onUsernameChange(value: TextFieldValue) {
         _uiState.value = _uiState.value.copy(
             username = value,
             usernameError = null  // Clears error when user starts typing
         )
     }
 
-    fun onPasswordChange(value: String) {
+    fun onPasswordChange(value: TextFieldValue) {
         _uiState.value = _uiState.value.copy(
             password = value,
             passwordError = null
         )
     }
 
-    fun onConfirmPasswordChange(value: String) {
+    fun onConfirmPasswordChange(value: TextFieldValue) {
         _uiState.value = _uiState.value.copy(
             confirmPassword = value,
             confirmPasswordError = null
         )
     }
 
-    fun onCityChange(value: String) {
+    fun onCityChange(value: TextFieldValue) {
         _uiState.value = _uiState.value.copy(
             city = value,
             cityError = null
@@ -59,10 +60,14 @@ class LoginViewModel @Inject constructor(
 
     fun register(onSuccess: () -> Unit) {
         val state = _uiState.value
+        val username = state.username.text
+        val password = state.password.text
+        val confirmPassword = state.confirmPassword.text
+        val city = state.city.text
 
         Log.d("LoginViewModel", "=== REGISTER ATTEMPT ===")
-        Log.d("LoginViewModel", "Username: ${state.username}")
-        Log.d("LoginViewModel", "City: ${state.city}")
+        Log.d("LoginViewModel", "Username: $username")
+        Log.d("LoginViewModel", "City: $city")
 
         // Validation
         val errors = validateRegister(state)
@@ -84,9 +89,9 @@ class LoginViewModel @Inject constructor(
                 _uiState.value = state.copy(isLoading = true, error = null)
 
                 // Check if user already exists
-                val existingUser = userRepository.getUserByUsername(state.username)
+                val existingUser = userRepository.getUserByUsername(username)
                 if (existingUser != null) {
-                    Log.e("LoginViewModel", "User already exists: ${state.username}")
+                    Log.e("LoginViewModel", "User already exists: $username")
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Username already exists! Please choose a different username."
@@ -95,11 +100,7 @@ class LoginViewModel @Inject constructor(
                 }
 
                 // Create new user
-                val success = userRepository.saveAndLoginUser(
-                    username = state.username,
-                    password = state.password,
-                    city = state.city
-                )
+                val success = userRepository.saveAndLoginUser(username, password, city)
 
                 if (success) {
                     Log.d("LoginViewModel", " Registration successful!")
@@ -125,9 +126,11 @@ class LoginViewModel @Inject constructor(
 
     fun login(onSuccess: () -> Unit) {
         val state = _uiState.value
+        val username = state.username.text
+        val password = state.password.text
 
         Log.d("LoginViewModel", "=== LOGIN ATTEMPT ===")
-        Log.d("LoginViewModel", "Username: ${state.username}")
+        Log.d("LoginViewModel", "Username: $username")
 
         // Validation for login
         val errors = validateLogin(state)
@@ -147,10 +150,10 @@ class LoginViewModel @Inject constructor(
                 _uiState.value = state.copy(isLoading = true, error = null)
 
                 // Get user from database
-                val user = userRepository.getUserByUsername(state.username)
+                val user = userRepository.getUserByUsername(username)
 
                 if (user == null) {
-                    Log.e("LoginViewModel", "User not found: ${state.username}")
+                    Log.e("LoginViewModel", "User not found: $username")
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Invalid username or password"
@@ -159,8 +162,8 @@ class LoginViewModel @Inject constructor(
                 }
 
                 // Check password
-                if (user.password != state.password) {
-                    Log.e("LoginViewModel", "Wrong password for user: ${state.username}")
+                if (user.password != password) {
+                    Log.e("LoginViewModel", "Wrong password for user: $username")
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Invalid username or password"
@@ -169,7 +172,7 @@ class LoginViewModel @Inject constructor(
                 }
 
                 // Mark user as logged in
-                val success = userRepository.loginUser(state.username, state.password)
+                val success = userRepository.loginUser(username, password)
 
                 if (success) {
                     Log.d("LoginViewModel", " Login successful!")
@@ -208,36 +211,40 @@ class LoginViewModel @Inject constructor(
     // Validation functions
     private fun validateRegister(state: LoginUiState): Map<String, String> {
         val errors = mutableMapOf<String, String>()
+        val username = state.username.text
+        val password = state.password.text
+        val confirmPassword = state.confirmPassword.text
+        val city = state.city.text
 
         // Username validation
         when {
-            state.username.isBlank() -> errors["username"] = "Username is required"
-            state.username.length < 3 -> errors["username"] = "Username must be at least 3 characters"
-            state.username.length > 20 -> errors["username"] = "Username must be less than 20 characters"
-            !state.username.matches(Regex("^[a-zA-Z0-9_]*$")) ->
+            username.isBlank() -> errors["username"] = "Username is required"
+            username.length < 3 -> errors["username"] = "Username must be at least 3 characters"
+            username.length > 20 -> errors["username"] = "Username must be less than 20 characters"
+            !username.matches(Regex("^[a-zA-Z0-9_]*$")) ->
                 errors["username"] = "Username can only contain letters, numbers, and underscores"
         }
 
         // Password validation
-        if (state.password.isBlank()) {
+        if (password.isBlank()) {
             errors["password"] = "Password is required"
         } else {
-            getPasswordValidationError(state.password)?.let {
+            getPasswordValidationError(password)?.let {
                 errors["password"] = it
             }
         }
 
         // Confirm password validation
         when {
-            state.confirmPassword.isBlank() -> errors["confirmPassword"] = "Please confirm your password"
-            state.password != state.confirmPassword -> errors["confirmPassword"] = "Passwords do not match"
+            confirmPassword.isBlank() -> errors["confirmPassword"] = "Please confirm your password"
+            password != confirmPassword -> errors["confirmPassword"] = "Passwords do not match"
         }
 
         // City validation
         when {
-            state.city.isBlank() -> errors["city"] = "Default city is required"
-            state.city.length < 2 -> errors["city"] = "City name is too short"
-            state.city.length > 50 -> errors["city"] = "City name is too long"
+            city.isBlank() -> errors["city"] = "Default city is required"
+            city.length < 2 -> errors["city"] = "City name is too short"
+            city.length > 50 -> errors["city"] = "City name is too long"
         }
 
         return errors
@@ -245,14 +252,16 @@ class LoginViewModel @Inject constructor(
 
     private fun validateLogin(state: LoginUiState): Map<String, String> {
         val errors = mutableMapOf<String, String>()
+        val username = state.username.text
+        val password = state.password.text
 
         // Username validation
-        if (state.username.isBlank()) {
+        if (username.isBlank()) {
             errors["username"] = "Username is required"
         }
 
         // Password validation
-        if (state.password.isBlank()) {
+        if (password.isBlank()) {
             errors["password"] = "Password is required"
         }
 

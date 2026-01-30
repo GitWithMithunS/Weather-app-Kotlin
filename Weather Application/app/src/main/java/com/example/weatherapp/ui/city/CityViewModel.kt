@@ -1,5 +1,6 @@
 package com.example.weatherapp.ui.city
 
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.local.room.entity.CityEntity
@@ -64,7 +65,7 @@ class CityViewModel @Inject constructor(
         }
     }
 
-    fun onCityNameChange(value: String) {
+    fun onCityNameChange(value: TextFieldValue) {
         _uiState.value = _uiState.value.copy(newCity = value)
     }
 
@@ -86,7 +87,7 @@ class CityViewModel @Inject constructor(
                 )
 
                 loadCities()
-                _uiState.value = _uiState.value.copy(newCity = "")
+                _uiState.value = _uiState.value.copy(newCity = TextFieldValue())
 
             } catch (e: Exception) {
                 e.printStackTrace()

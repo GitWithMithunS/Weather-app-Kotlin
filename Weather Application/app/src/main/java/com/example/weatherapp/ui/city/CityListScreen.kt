@@ -10,14 +10,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.weatherapp.data.local.room.entity.CityEntity
 import com.example.weatherapp.ui.components.AppBottomBar
 import com.example.weatherapp.ui.components.AppTopBar
 import com.example.weatherapp.ui.components.BottomNavItem
+
+private enum class FocusField {
+    ADD_CITY, NONE
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +37,15 @@ fun CityListScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+
+    var focusedField by rememberSaveable { mutableStateOf(FocusField.NONE) }
+    val addCityFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        if (focusedField == FocusField.ADD_CITY) {
+            addCityFocusRequester.requestFocus()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -61,13 +78,18 @@ fun CityListScreen(
                     value = state.newCity,
                     onValueChange = viewModel::onCityNameChange,
                     label = { Text("Add City") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(addCityFocusRequester)
+                        .onFocusChanged {
+                            if (it.isFocused) focusedField = FocusField.ADD_CITY
+                        }
                 )
             }
 
             item {
                 Button(
-                    onClick = { viewModel.addCity(state.newCity) },
+                    onClick = { viewModel.addCity(state.newCity.text) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Add City")
@@ -89,9 +111,9 @@ fun CityListScreen(
                     }
                 }
             }
-            
+
             item {
-                 Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             if (state.isLoading) {

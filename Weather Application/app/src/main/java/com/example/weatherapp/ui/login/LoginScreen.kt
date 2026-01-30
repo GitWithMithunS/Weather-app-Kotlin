@@ -11,21 +11,47 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
+private enum class FocusField {
+    USERNAME, PASSWORD, CONFIRM_PASSWORD, CITY, NONE
+}
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit, viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-    var showPassword by remember { mutableStateOf(false) }
-    var showConfirmPassword by remember { mutableStateOf(false) }
+    var showPassword by rememberSaveable { mutableStateOf(false) }
+    var showConfirmPassword by rememberSaveable { mutableStateOf(false) }
+
+    var focusedField by rememberSaveable { mutableStateOf(FocusField.NONE) }
+    val usernameFocusRequester = remember { FocusRequester() }
+    val passwordFocusRequester = remember { FocusRequester() }
+    val confirmPasswordFocusRequester = remember { FocusRequester() }
+    val cityFocusRequester = remember { FocusRequester() }
+
+    // Restores focus when the composable is recomposed
+    LaunchedEffect(Unit) {
+        when (focusedField) {
+            FocusField.USERNAME -> usernameFocusRequester.requestFocus()
+            FocusField.PASSWORD -> passwordFocusRequester.requestFocus()
+            FocusField.CONFIRM_PASSWORD -> confirmPasswordFocusRequester.requestFocus()
+            FocusField.CITY -> cityFocusRequester.requestFocus()
+            FocusField.NONE -> {}
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -57,7 +83,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ===== ERROR MESSAGE =====
+
             state.error?.let {
                 Card(
                     modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
@@ -79,7 +105,12 @@ fun LoginScreen(
                 value = state.username,
                 onValueChange = viewModel::onUsernameChange,
                 label = { Text("Username") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(usernameFocusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) focusedField = FocusField.USERNAME
+                    },
                 isError = state.usernameError != null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
@@ -97,7 +128,12 @@ fun LoginScreen(
                 value = state.password,
                 onValueChange = viewModel::onPasswordChange,
                 label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(passwordFocusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) focusedField = FocusField.PASSWORD
+                    },
                 isError = state.passwordError != null,
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -125,7 +161,12 @@ fun LoginScreen(
                     value = state.confirmPassword,
                     onValueChange = viewModel::onConfirmPasswordChange,
                     label = { Text("Confirm Password") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(confirmPasswordFocusRequester)
+                        .onFocusChanged {
+                            if (it.isFocused) focusedField = FocusField.CONFIRM_PASSWORD
+                        },
                     isError = state.confirmPasswordError != null,
                     visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -154,7 +195,12 @@ fun LoginScreen(
                     value = state.city,
                     onValueChange = viewModel::onCityChange,
                     label = { Text("Default City") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(cityFocusRequester)
+                        .onFocusChanged {
+                            if (it.isFocused) focusedField = FocusField.CITY
+                        },
                     isError = state.cityError != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
