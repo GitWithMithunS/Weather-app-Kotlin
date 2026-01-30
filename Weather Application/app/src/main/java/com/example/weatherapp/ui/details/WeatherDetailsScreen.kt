@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.weatherapp.ui.components.AppBottomBar
@@ -366,7 +367,7 @@ private fun StatCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = iconTint)
                 Spacer(Modifier.width(6.dp))
-                Text(title, style = MaterialTheme.typography.bodySmall)
+                Text(title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
             }
             Spacer(Modifier.height(4.dp))
             Text(
@@ -388,7 +389,7 @@ private fun SunInfo(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(icon, contentDescription = null, tint = tint)
         Spacer(Modifier.height(4.dp))
-        Text(title, style = MaterialTheme.typography.bodySmall)
+        Text(title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
         Text(time, style = MaterialTheme.typography.titleMedium)
     }
 }

@@ -1,8 +1,8 @@
 package com.example.weatherapp.navigation
 
-object Routes {
-    const val LOGIN = "login"
-    const val HOME = "home"
-    const val CITIES = "cities"
-    const val DETAILS = "details"
+sealed class Routes(val route: String) {
+    object Login : Routes("login")
+    object Home : Routes("home")
+    object Cities : Routes("cities")
+    object Details : Routes("details")
 }

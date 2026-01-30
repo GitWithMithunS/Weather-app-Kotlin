@@ -212,7 +212,7 @@ class WeatherDetailsViewModel @Inject constructor(
         return try {
             val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
             val date = inputFormat.parse(dateString)
-            val outputFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+            val outputFormat = SimpleDateFormat("h a", Locale.getDefault())
             date?.let { outputFormat.format(it) } ?: dateString.substringAfter(" ").substringBeforeLast(":")
         } catch (_: Exception) {
             dateString.substringAfter(" ").substringBeforeLast(":")

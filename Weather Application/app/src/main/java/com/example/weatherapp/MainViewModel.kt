@@ -14,20 +14,20 @@ class MainViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _username = MutableStateFlow("Guest")
-    val username: StateFlow<String> = _username
+    private val _isLoggedIn = MutableStateFlow<Boolean?>(null)
+    val isLoggedIn: StateFlow<Boolean?> = _isLoggedIn
 
     init {
-        loadCurrentUser()
+        checkLoginStatus()
     }
 
-    private fun loadCurrentUser() {
+    private fun checkLoginStatus() {
         viewModelScope.launch {
             try {
                 val user = userRepository.getCurrentUser()
-                _username.value = user?.username ?: "Guest"
+                _isLoggedIn.value = user != null
             } catch (e: Exception) {
-                _username.value = "Guest"
+                _isLoggedIn.value = false
             }
         }
     }

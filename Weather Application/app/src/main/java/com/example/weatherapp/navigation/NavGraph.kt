@@ -15,64 +15,65 @@ import com.example.weatherapp.ui.details.WeatherDetailsScreen
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
+    startDestination: String,
     modifier: Modifier = Modifier
 ) {
 
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN,
+        startDestination = startDestination,
         modifier = modifier
     ) {
 
-        composable(Routes.LOGIN) {
+        composable(Routes.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    navController.navigate(Routes.Home.route) {
+                        popUpTo(Routes.Login.route) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Routes.HOME) {
+        composable(Routes.Home.route) {
             HomeScreen(
                 onCitiesClick = {
-                    navController.navigate(Routes.CITIES)
+                    navController.navigate(Routes.Cities.route)
                 },
                 onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                    navController.navigate(Routes.Login.route) {
+                        popUpTo(Routes.Home.route) { inclusive = true }
                     }
                 },
                 onWeatherClick = { city, date ->
                     val route = if (date != null) {
-                        "${Routes.DETAILS}/$city?date=$date"
+                        "${Routes.Details.route}/$city?date=$date"
                     } else {
-                        "${Routes.DETAILS}/$city"
+                        "${Routes.Details.route}/$city"
                     }
                     navController.navigate(route)
                 }
             )
         }
 
-        composable(Routes.CITIES) {
+        composable(Routes.Cities.route) {
             CityListScreen(
                 onCityClick = { city ->
-                    navController.navigate("${Routes.DETAILS}/$city")
+                    navController.navigate("${Routes.Details.route}/$city")
                 },
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onHomeClick = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                    navController.navigate(Routes.Home.route) {
+                        popUpTo(Routes.Home.route) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(
-            route = "${Routes.DETAILS}/{city}?date={date}",
+            route = "${Routes.Details.route}/{city}?date={date}",
             arguments = listOf(
                 navArgument("city") { type = NavType.StringType },
                 navArgument("date") { type = NavType.StringType; nullable = true }
@@ -85,18 +86,21 @@ fun AppNavGraph(
                 date = date,
                 onBackClick = { navController.popBackStack() },
                 onHomeClick = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                    navController.navigate(Routes.Home.route) {
+                        popUpTo(Routes.Home.route) { inclusive = true }
                     }
                 },
                 onCitiesClick = {
-                    navController.navigate(Routes.CITIES) {
-                        popUpTo(Routes.HOME)
+                    navController.navigate(Routes.Cities.route) {
+                        popUpTo(Routes.Home.route)
                     }
                 },
                 onDayClick = { newCity, newDate ->
-                    navController.navigate("${Routes.DETAILS}/$newCity?date=$newDate") {
-                        popUpTo("${Routes.DETAILS}/$city?date=$date") { inclusive = true }
+                    val route = "${Routes.Details.route}/$newCity?date=$newDate"
+                    navController.navigate(route) {
+                        // Pop up to the details screen for the original city and date
+                        val originalRoute = "${Routes.Details.route}/$city?date=$date"
+                        popUpTo(originalRoute) { inclusive = true }
                     }
                 }
             )
