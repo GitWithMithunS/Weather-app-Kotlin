@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -28,6 +29,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
 
     Scaffold(
         topBar = {
@@ -59,6 +61,7 @@ fun HomeScreen(
             }
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
