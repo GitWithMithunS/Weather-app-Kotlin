@@ -21,8 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    onLoginSuccess: () -> Unit, viewModel: LoginViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     var showPassword by remember { mutableStateOf(false) }
@@ -61,8 +60,7 @@ fun LoginScreen(
             // ===== ERROR MESSAGE =====
             state.error?.let {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
+                    modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
                 ) {
@@ -189,8 +187,7 @@ fun LoginScreen(
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
                     Text(

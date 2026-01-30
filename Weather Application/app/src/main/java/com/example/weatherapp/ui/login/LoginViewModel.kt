@@ -21,7 +21,7 @@ class LoginViewModel @Inject constructor(
     fun onUsernameChange(value: String) {
         _uiState.value = _uiState.value.copy(
             username = value,
-            usernameError = null  // Clear error when user starts typing
+            usernameError = null  // Clears error when user starts typing
         )
     }
 

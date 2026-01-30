@@ -24,8 +24,6 @@ interface OpenWeatherApiService {
      * Get current weather by coordinates
      * @param latitude: Latitude of the location
      * @param longitude: Longitude of the location
-     * @param apiKey: Your OpenWeather API key
-     * @param units: Units of measurement
      */
     @GET("weather")
     suspend fun getCurrentWeatherByCoordinates(
@@ -38,8 +36,6 @@ interface OpenWeatherApiService {
     /**
      * Get 5-day forecast for a city
      * @param cityName: Name of the city
-     * @param apiKey: Your OpenWeather API key
-     * @param units: Units of measurement
      */
     @GET("forecast")
     suspend fun getForecast(
@@ -50,10 +46,6 @@ interface OpenWeatherApiService {
 
     /**
      * Get 5-day forecast by coordinates
-     * @param latitude: Latitude of the location
-     * @param longitude: Longitude of the location
-     * @param apiKey: Your OpenWeather API key
-     * @param units: Units of measurement
      */
     @GET("forecast")
     suspend fun getForecastByCoordinates(

@@ -10,9 +10,7 @@ class CityRepository @Inject constructor(
     private val cityDao: CityDao
 ) {
 
-    /**
-     * Add a new city for user
-     */
+    //Add a new city for user
     suspend fun addCity(
         cityName: String,
         username: String,
@@ -34,9 +32,7 @@ class CityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get all cities for a user
-     */
+    //Get all cities for a user
     suspend fun getCities(username: String): List<CityEntity> {
         return try {
             cityDao.getCitiesByUsername(username)
@@ -46,9 +42,7 @@ class CityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get a specific city
-     */
+    //Get a specific city
     suspend fun getCity(cityName: String, username: String): CityEntity? {
         return try {
             cityDao.getCityByNameAndUser(cityName, username)
@@ -58,9 +52,7 @@ class CityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Update city
-     */
+
     suspend fun updateCity(city: CityEntity): Boolean {
         return try {
             cityDao.updateCity(city)
@@ -71,9 +63,7 @@ class CityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Delete a city
-     */
+    //Delete a city
     suspend fun deleteCity(city: CityEntity): Boolean {
         return try {
             cityDao.deleteCity(city)
@@ -84,9 +74,8 @@ class CityRepository @Inject constructor(
         }
     }
 
-    /**
-     * Delete all cities for a user
-     */
+
+    //Delete all cities for a user
     suspend fun deleteAllCities(username: String): Boolean {
         return try {
             cityDao.deleteCitiesByUsername(username)

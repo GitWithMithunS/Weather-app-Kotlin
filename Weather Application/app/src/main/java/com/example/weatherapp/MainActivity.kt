@@ -25,8 +25,7 @@ class MainActivity : ComponentActivity() {
                 val mainViewModel: MainViewModel = hiltViewModel()
                 val username by mainViewModel.username.collectAsState()
 
-                // AppNavGraph handles all the UI including Scaffold
-                // No need for a top-level Scaffold here
+
                 AppNavGraph(
                     navController = navController
                 )
