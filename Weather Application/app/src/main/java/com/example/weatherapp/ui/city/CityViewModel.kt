@@ -7,6 +7,7 @@ import com.example.weatherapp.data.local.CityDataSource
 import com.example.weatherapp.data.local.room.entity.CityEntity
 import com.example.weatherapp.data.repository.CityRepository
 import com.example.weatherapp.data.repository.UserRepository
+import com.example.weatherapp.data.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CityViewModel @Inject constructor(
     private val cityRepository: CityRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val weatherRepository: WeatherRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CityUiState())
@@ -75,6 +77,7 @@ class CityViewModel @Inject constructor(
         }
 
         _uiState.value = _uiState.value.copy(newCity = value, suggestions = suggestions)
+//        _uiState.value = _uiState.value.copy(newCity = value, error = null)
     }
 
     fun addCity(cityName: String) {
@@ -85,18 +88,52 @@ class CityViewModel @Inject constructor(
             return
         }
 
+        // Pre-check if city already exists in local list (to avoid unnecessary API calls)
+        val cityExists = state.cities.any { it.cityName.equals(cityName.trim(), ignoreCase = true) }
+        if (cityExists) {
+            _uiState.value = state.copy(error = "City already added", newCity = TextFieldValue())
+            return
+        }
+
         viewModelScope.launch {
             try {
                 _uiState.value = state.copy(isLoading = true, error = null)
 
-                cityRepository.addCity(
-                    cityName = cityName,
-                    username = state.username
-                )
+                // Validate city with Weather API before adding
+                val weatherResult = weatherRepository.getCurrentWeather(cityName.trim())
+
+                if (weatherResult.isSuccess) {
+                    val weatherResponse = weatherResult.getOrNull()
+                    val validatedCityName = weatherResponse?.name ?: cityName.trim()
+
+                    // Double check with validated name from API
+                    if (state.cities.any { it.cityName.equals(validatedCityName, ignoreCase = true) }) {
+                        _uiState.value = state.copy(
+                            isLoading = false,
+                            error = "City already added",
+                            newCity = TextFieldValue()
+                        )
+                        return@launch
+                    }
+
+                    cityRepository.addCity(
+                        cityName = validatedCityName,
+                        username = state.username,
+                        latitude = weatherResponse?.coord?.lat ?: 0.0,
+                        longitude = weatherResponse?.coord?.lon ?: 0.0
+                    )
 
                 loadCities()
                 // Clear the search field and suggestions after adding a city
                 _uiState.value = _uiState.value.copy(newCity = TextFieldValue(), suggestions = emptyList())
+                    loadCities()
+                    _uiState.value = _uiState.value.copy(newCity = TextFieldValue())
+                } else {
+                    _uiState.value = state.copy(
+                        isLoading = false,
+                        error = "Invalid city name. Please try again."
+                    )
+                }
 
             } catch (e: Exception) {
                 e.printStackTrace()
