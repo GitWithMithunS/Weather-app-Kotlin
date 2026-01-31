@@ -14,7 +14,6 @@ A feature-rich, modern Android weather application built with Kotlin and Jetpack
 -   **Hourly Breakdown:** See temperature and weather changes on an hourly basis.
 -   **Dark Mode Support:** A sleek, theme-aware UI that adapts to system settings.
 -   **Temperature Unit Toggle:** Switch between Celsius and Fahrenheit.
--   **Robust Error Handling:** Custom user-friendly messages for errors like "City not found".
 -   **State Preservation:** UI state, including focus and cursor position, is preserved during screen rotations.
 
 ## Technical Features
@@ -28,7 +27,6 @@ A feature-rich, modern Android weather application built with Kotlin and Jetpack
 -   **Jetpack Navigation:** For navigating between composable screens.
 -   **Coroutines & Flow:** For handling asynchronous operations and managing state.
 -   **State-Driven UI:** UI components react to state changes from the ViewModel.
--   **Debouncing:** Efficiently handles search API calls to prevent rate-limiting and save resources.
 
 ## Screens
 
@@ -48,7 +46,6 @@ A feature-rich, modern Android weather application built with Kotlin and Jetpack
 ### 3. City List Screen
 
 -   Displays a list of the user's saved cities.
--   **Dynamic Search Bar:** As a user types, suggestions are fetched from a live API and displayed.
 -   Users can add a city by selecting a suggestion or by typing a full city name.
 -   Users can delete cities from their list.
 -   Shows a list of popular cities to easily add them.
@@ -84,3 +81,4 @@ To build and run this project, you will need to provide your own API keys.
     
     
     
+
