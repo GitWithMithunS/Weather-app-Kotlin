@@ -37,9 +37,16 @@ fun CityListScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var focusedField by rememberSaveable { mutableStateOf(FocusField.NONE) }
     val addCityFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (focusedField == FocusField.ADD_CITY) {
@@ -48,6 +55,7 @@ fun CityListScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 username = "Search for Cities",
@@ -83,7 +91,8 @@ fun CityListScreen(
                         .focusRequester(addCityFocusRequester)
                         .onFocusChanged {
                             if (it.isFocused) focusedField = FocusField.ADD_CITY
-                        }
+                        },
+                    isError = state.error != null
                 )
             }
 

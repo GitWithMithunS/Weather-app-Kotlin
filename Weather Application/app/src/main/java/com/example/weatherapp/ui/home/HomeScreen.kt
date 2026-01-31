@@ -30,6 +30,28 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(text = "Confirm Logout") },
+            text = { Text(text = "Are you sure you want to log out?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutDialog = false
+                    viewModel.logout(onLogout)
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("CANCEL")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -37,7 +59,7 @@ fun HomeScreen(
                 username = state.username,
                 showLogout = true,
                 onLogoutClick = {
-                    viewModel.logout(onLogout)
+                    showLogoutDialog = true
                 }
             )
         },
