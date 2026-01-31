@@ -3,6 +3,7 @@ package com.example.weatherapp.ui.city
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.weatherapp.data.local.CityDataSource
 import com.example.weatherapp.data.local.room.entity.CityEntity
 import com.example.weatherapp.data.repository.CityRepository
 import com.example.weatherapp.data.repository.UserRepository
@@ -66,7 +67,14 @@ class CityViewModel @Inject constructor(
     }
 
     fun onCityNameChange(value: TextFieldValue) {
-        _uiState.value = _uiState.value.copy(newCity = value)
+        val query = value.text
+        val suggestions = if (query.isNotBlank()) {
+            CityDataSource.cities.filter { it.startsWith(query, ignoreCase = true) && it != query }
+        } else {
+            emptyList()
+        }
+
+        _uiState.value = _uiState.value.copy(newCity = value, suggestions = suggestions)
     }
 
     fun addCity(cityName: String) {
@@ -87,7 +95,8 @@ class CityViewModel @Inject constructor(
                 )
 
                 loadCities()
-                _uiState.value = _uiState.value.copy(newCity = TextFieldValue())
+                // Clear the search field and suggestions after adding a city
+                _uiState.value = _uiState.value.copy(newCity = TextFieldValue(), suggestions = emptyList())
 
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -77,61 +77,82 @@ fun CityListScreen(
                 OutlinedTextField(
                     value = state.newCity,
                     onValueChange = viewModel::onCityNameChange,
-                    label = { Text("Add City") },
+                    label = { Text("Search and Add City") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(addCityFocusRequester)
                         .onFocusChanged {
                             if (it.isFocused) focusedField = FocusField.ADD_CITY
-                        }
+                        },
+                    singleLine = true
                 )
             }
 
-            item {
-                Button(
-                    onClick = { viewModel.addCity(state.newCity.text) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Add City")
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Popular Cities", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            item {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.recommendedCities) { city ->
-                        Chip(city, onClick = { viewModel.addCity(city) })
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            if (state.isLoading) {
+            // Always show the add button if the user is typing
+            if (state.newCity.text.isNotBlank()) {
                 item {
-                    Box(
-                        modifier = Modifier.fillParentMaxSize(),
-                        contentAlignment = Alignment.Center
+                    Button(
+                        onClick = { viewModel.addCity(state.newCity.text) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        CircularProgressIndicator()
+                        Text("Add city")
                     }
                 }
-            } else {
-                items(state.cities) { city ->
-                    CityItem(
-                        city = city,
-                        onClick = { onCityClick(city.cityName) },
-                        onDelete = { viewModel.deleteCity(city) }
+            }
+
+            // Show suggestions only when the user is typing
+            if (state.suggestions.isNotEmpty()) {
+                items(state.suggestions) { suggestion ->
+                    Text(
+                        text = suggestion,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.addCity(suggestion) }
+                            .padding(vertical = 12.dp, horizontal = 16.dp)
                     )
+                }
+            } else if (state.newCity.text.isBlank()) {
+                // Show the rest of the UI only when not searching
+
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Popular Cities", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(state.recommendedCities) { city ->
+                            Chip(city, onClick = { viewModel.addCity(city) })
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Your Cities", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (state.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillParentMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else {
+                    items(state.cities) { city ->
+                        CityItem(
+                            city = city,
+                            onClick = { onCityClick(city.cityName) },
+                            onDelete = { viewModel.deleteCity(city) }
+                        )
+                    }
                 }
             }
         }

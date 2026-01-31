@@ -35,6 +35,7 @@ fun LoginScreen(
     var showPassword by rememberSaveable { mutableStateOf(false) }
     var showConfirmPassword by rememberSaveable { mutableStateOf(false) }
 
+    //States to preserve focus on config changes(on activity recreation)
     var focusedField by rememberSaveable { mutableStateOf(FocusField.NONE) }
     val usernameFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }

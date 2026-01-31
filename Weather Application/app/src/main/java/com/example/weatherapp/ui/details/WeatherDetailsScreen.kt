@@ -100,7 +100,7 @@ private fun WeatherDetailsContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = state.error ?: "Unknown error",
+                        text = "City not found",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
