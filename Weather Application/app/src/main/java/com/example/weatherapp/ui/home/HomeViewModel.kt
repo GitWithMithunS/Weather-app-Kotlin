@@ -49,18 +49,25 @@ class HomeViewModel @Inject constructor(
                 tempInCelsius = weatherData.mainWeather.temp.toInt()
                 feelsLikeInCelsius = weatherData.mainWeather.feelsLike.toInt()
 
+                val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
                 forecastItems = forecastData.list.groupBy {
                     it.dateText.substringBefore(" ")
                 }.mapNotNull { (date, forecasts) ->
                     val first = forecasts.first()
                     val minTemp = forecasts.minOf { it.mainWeather.tempMin }
                     val maxTemp = forecasts.maxOf { it.mainWeather.tempMax }
-                    val dayOfWeek = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
+                    
+                    val displayDay = if (date == todayDate) {
+                        "Today"
+                    } else {
+                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
+                    }
 
                     ForecastItem(
                         date = date,
-                        day = dayOfWeek,
+                        day = displayDay,
                         description = first.weather.firstOrNull()?.description ?: "",
                         minTemp = "${minTemp.toInt()}",
                         maxTemp = "${maxTemp.toInt()}",
