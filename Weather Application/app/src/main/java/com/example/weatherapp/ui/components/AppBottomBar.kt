@@ -1,13 +1,18 @@
 package com.example.weatherapp.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 
-enum class BottomNavItem {
-    HOME,
-    CITIES
+enum class BottomNavItem(val icon: ImageVector) {
+    HOME(Icons.Default.Home),
+    CITIES(Icons.Default.LocationCity)
 }
 
 @Composable
@@ -24,7 +29,7 @@ fun AppBottomBar(
             label = { Text("Home") },
             icon = {
                 Icon(
-                    imageVector = Icons.Default.LocationCity,
+                    imageVector = BottomNavItem.HOME.icon,
                     contentDescription = "Home"
                 )
             },
@@ -36,8 +41,8 @@ fun AppBottomBar(
             label = { Text("Cities") },
             icon = {
                 Icon(
-                    imageVector = Icons.Default.LocationCity,
-                    contentDescription = "Home"
+                    imageVector = BottomNavItem.CITIES.icon,
+                    contentDescription = "Cities"
                 )
             },
         )

@@ -1,5 +1,8 @@
 package com.example.weatherapp.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -26,13 +29,15 @@ fun AppNavGraph(
     ) {
 
         composable(Routes.Login.route) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Routes.Home.route) {
-                        popUpTo(Routes.Login.route) { inclusive = true }
+            Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate(Routes.Home.route) {
+                            popUpTo(Routes.Login.route) { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         composable(Routes.Home.route) {

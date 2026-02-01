@@ -125,7 +125,10 @@ private fun WeatherDetailsContent(
                                 text = state.title,
                                 style = MaterialTheme.typography.headlineMedium
                             )
-                            TemperatureToggle(isFahrenheit = state.isFahrenheit, onToggle = onToggleTemperature)
+                            TemperatureToggle(
+                                isFahrenheit = state.isFahrenheit,
+                                onToggle = onToggleTemperature
+                            )
                         }
                     }
 
@@ -221,7 +224,9 @@ private fun WeatherDetailsContent(
                                                 Spacer(Modifier.height(4.dp))
 
                                                 Icon(
-                                                    imageVector = WeatherIconMapper.getWeatherIcon(hour.icon),
+                                                    imageVector = WeatherIconMapper.getWeatherIcon(
+                                                        hour.icon
+                                                    ),
                                                     contentDescription = null,
                                                     tint = WeatherIconMapper.getIconColor(hour.icon)
                                                 )
@@ -231,7 +236,6 @@ private fun WeatherDetailsContent(
                                                 Text(
                                                     hour.temperature,
                                                     style = MaterialTheme.typography.titleMedium,
-                                                    color = MaterialTheme.colorScheme.primary
                                                 )
                                             }
                                         }
@@ -349,7 +353,13 @@ private fun StatsGrid(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatCard("Cloudiness", cloudiness, Icons.Filled.Cloud, Modifier.weight(1f), iconTint = Color(0xFF81D4FA))
+            StatCard(
+                "Cloudiness",
+                cloudiness,
+                Icons.Filled.Cloud,
+                Modifier.weight(1f),
+                iconTint = Color(0xFF81D4FA)
+            )
         }
     }
 }
@@ -365,15 +375,22 @@ private fun StatCard(
     Card(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = iconTint)
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = iconTint
+                )
                 Spacer(Modifier.width(6.dp))
-                Text(title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                Text(
+                    title,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                )
             }
             Spacer(Modifier.height(4.dp))
             Text(
                 value,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
             )
         }
     }
