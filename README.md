@@ -78,7 +78,9 @@ To build and run this project, you will need to provide your own API keys.
 1.  **Clone the repository:** git clone https://github.com/GitWithMithunS/Weather-app-Kotlin.git
 2.  **Provide your own API KEY:** OPEN_WEATHER_API_KEY="YOUR_OPENWEATHERMAP_API_KEY"
     
+## Architectural  Diagram
+<img width="8191" height="3254" alt="Untitled diagram-2026-02-03-175514" src="https://github.com/user-attachments/assets/5937522b-9268-48c3-afcb-bc9e564088e1" />
+
     
-    
-    
+
 
