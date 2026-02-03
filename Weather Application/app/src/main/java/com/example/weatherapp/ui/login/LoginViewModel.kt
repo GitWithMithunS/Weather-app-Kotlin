@@ -5,6 +5,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.UserRepository
+import com.example.weatherapp.data.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val weatherRepository: WeatherRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -22,7 +24,7 @@ class LoginViewModel @Inject constructor(
     fun onUsernameChange(value: TextFieldValue) {
         _uiState.value = _uiState.value.copy(
             username = value,
-            usernameError = null  // Clears error when user starts typing
+            usernameError = null
         )
     }
 
@@ -64,19 +66,14 @@ class LoginViewModel @Inject constructor(
         val password = state.password.text
         val city = state.city.text
 
-        Log.d("LoginViewModel", "=== REGISTER ATTEMPT ===")
-        Log.d("LoginViewModel", "Username: $username")
-        Log.d("LoginViewModel", "City: $city")
-
-        // Validation
-        val errors = validateRegister(state)
-        if (errors.isNotEmpty()) {
-            Log.d("LoginViewModel", "Validation errors: $errors")
+        // 1. Local Validation
+        val localErrors = validateRegister(state)
+        if (localErrors.isNotEmpty()) {
             _uiState.value = state.copy(
-                usernameError = errors["username"],
-                passwordError = errors["password"],
-                confirmPasswordError = errors["confirmPassword"],
-                cityError = errors["city"],
+                usernameError = localErrors["username"],
+                passwordError = localErrors["password"],
+                confirmPasswordError = localErrors["confirmPassword"],
+                cityError = localErrors["city"],
                 error = "Please enter proper details"
             )
             return
@@ -84,13 +81,21 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                Log.d("LoginViewModel", "Starting registration...")
                 _uiState.value = state.copy(isLoading = true, error = null)
 
-                // Check if user already exists
+                // 2. API-based City Validation
+                val weatherResult = weatherRepository.getCurrentWeather(city)
+                if (weatherResult.isFailure) {
+                    _uiState.value = state.copy(
+                        isLoading = false,
+                        cityError = "Invalid city name."
+                    )
+                    return@launch
+                }
+
+                // 3. Check if user already exists
                 val existingUser = userRepository.getUserByUsername(username)
                 if (existingUser != null) {
-                    Log.e("LoginViewModel", "User already exists: $username")
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Username already exists! Please choose a different username."
@@ -98,15 +103,13 @@ class LoginViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Create new user
+                // 4. Create new user
                 val success = userRepository.saveAndLoginUser(username, password, city)
 
                 if (success) {
-                    Log.d("LoginViewModel", " Registration successful!")
                     _uiState.value = state.copy(isLoading = false)
                     onSuccess()
                 } else {
-                    Log.e("LoginViewModel", " Registration failed")
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Registration failed. Please try again."
@@ -114,7 +117,6 @@ class LoginViewModel @Inject constructor(
                 }
 
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "Exception during registration: ${e.message}", e)
                 _uiState.value = state.copy(
                     isLoading = false,
                     error = "Error: ${e.message}"
@@ -128,13 +130,8 @@ class LoginViewModel @Inject constructor(
         val username = state.username.text
         val password = state.password.text
 
-        Log.d("LoginViewModel", "=== LOGIN ATTEMPT ===")
-        Log.d("LoginViewModel", "Username: $username")
-
-        // Validation for login
         val errors = validateLogin(state)
         if (errors.isNotEmpty()) {
-            Log.d("LoginViewModel", "Validation errors: $errors")
             _uiState.value = state.copy(
                 usernameError = errors["username"],
                 passwordError = errors["password"],
@@ -145,14 +142,10 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                Log.d("LoginViewModel", "Starting login...")
                 _uiState.value = state.copy(isLoading = true, error = null)
-
-                // Get user from database
                 val user = userRepository.getUserByUsername(username)
 
-                if (user == null) {
-                    Log.e("LoginViewModel", "User not found: $username")
+                if (user == null || user.password != password) {
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Invalid username or password"
@@ -160,25 +153,12 @@ class LoginViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Check password
-                if (user.password != password) {
-                    Log.e("LoginViewModel", "Wrong password for user: $username")
-                    _uiState.value = state.copy(
-                        isLoading = false,
-                        error = "Invalid username or password"
-                    )
-                    return@launch
-                }
-
-                // Mark user as logged in
                 val success = userRepository.loginUser(username, password)
 
                 if (success) {
-                    Log.d("LoginViewModel", " Login successful!")
                     _uiState.value = state.copy(isLoading = false)
                     onSuccess()
                 } else {
-                    Log.e("LoginViewModel", " Login failed")
                     _uiState.value = state.copy(
                         isLoading = false,
                         error = "Login failed. Please try again."
@@ -186,7 +166,6 @@ class LoginViewModel @Inject constructor(
                 }
 
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "Exception during login: ${e.message}", e)
                 _uiState.value = state.copy(
                     isLoading = false,
                     error = "Error: ${e.message}"
