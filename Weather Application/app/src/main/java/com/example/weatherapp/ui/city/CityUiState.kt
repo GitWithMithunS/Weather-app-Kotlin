@@ -8,7 +8,7 @@ data class CityUiState(
     val cities: List<CityEntity> = emptyList(),
     val newCity: TextFieldValue = TextFieldValue(),
     val recommendedCities: List<String> = emptyList(),
-    val suggestions: List<String> = emptyList(), // For search suggestions
+    val suggestions: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )

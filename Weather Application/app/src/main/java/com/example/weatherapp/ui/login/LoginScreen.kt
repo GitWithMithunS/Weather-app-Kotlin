@@ -69,7 +69,6 @@ fun LoginScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // ===== HEADER =====
             Icon(
                 imageVector = Icons.Filled.Cloud,
                 contentDescription = null,
@@ -102,7 +101,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ===== USERNAME FIELD =====
+
             OutlinedTextField(
                 value = state.username,
                 onValueChange = viewModel::onUsernameChange,
@@ -125,7 +124,6 @@ fun LoginScreen(
                 )
             }
 
-            // ===== PASSWORD FIELD =====
             OutlinedTextField(
                 value = state.password,
                 onValueChange = viewModel::onPasswordChange,
@@ -157,7 +155,7 @@ fun LoginScreen(
                 )
             }
 
-            // ===== CONFIRM PASSWORD (REGISTER ONLY) =====
+
             if (state.isRegisterMode) {
                 OutlinedTextField(
                     value = state.confirmPassword,
@@ -191,7 +189,7 @@ fun LoginScreen(
                 }
             }
 
-            // ===== CITY FIELD (REGISTER ONLY) =====
+
             if (state.isRegisterMode) {
                 OutlinedTextField(
                     value = state.city,
@@ -218,7 +216,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ===== ACTION BUTTON =====
+
             Button(
                 onClick = {
                     if (state.isRegisterMode) {
@@ -247,7 +245,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ===== TOGGLE MODE BUTTON =====
+            // TOGGLE MODE BUTTON
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,

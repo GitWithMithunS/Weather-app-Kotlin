@@ -12,10 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.weatherapp.data.local.room.entity.CityEntity
@@ -27,7 +29,7 @@ private enum class FocusField {
     ADD_CITY, NONE
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun CityListScreen(
     onCityClick: (String) -> Unit,
@@ -38,12 +40,14 @@ fun CityListScreen(
     val state by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var focusedField by rememberSaveable { mutableStateOf(FocusField.NONE) }
     val addCityFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(state.error) {
         state.error?.let {
+            keyboardController?.hide()
             snackbarHostState.showSnackbar(it)
         }
     }

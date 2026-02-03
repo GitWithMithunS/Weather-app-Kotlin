@@ -175,7 +175,7 @@ class WeatherDetailsViewModel @Inject constructor(
 
     private fun updateTemperatures() {
         val isFahrenheit = _uiState.value.isFahrenheit
-        _uiState.update {
+        _uiState.update { it ->
             it.copy(
                 temperature = formatTemperature(tempInCelsius, isFahrenheit),
                 feelsLike = formatTemperature(feelsLikeInCelsius, isFahrenheit),

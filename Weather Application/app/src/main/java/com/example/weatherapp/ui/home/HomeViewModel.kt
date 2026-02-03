@@ -1,6 +1,5 @@
 package com.example.weatherapp.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.weatherapp.data.repository.UserRepository
@@ -12,7 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -57,12 +57,13 @@ class HomeViewModel @Inject constructor(
                     val first = forecasts.first()
                     val minTemp = forecasts.minOf { it.mainWeather.tempMin }
                     val maxTemp = forecasts.maxOf { it.mainWeather.tempMax }
-                    
+
                     val displayDay = if (date == todayDate) {
                         "Today"
                     } else {
                         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            .parse(date)?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
+                            .parse(date)
+                            ?.let { SimpleDateFormat("EEE", Locale.getDefault()).format(it) } ?: ""
                     }
 
                     ForecastItem(
@@ -107,7 +108,7 @@ class HomeViewModel @Inject constructor(
 
     private fun updateTemperatures() {
         val isFahrenheit = _uiState.value.isFahrenheit
-        _uiState.update {
+        _uiState.update { it ->
             it.copy(
                 temperature = formatTemperature(tempInCelsius, isFahrenheit),
                 feelsLike = formatTemperature(feelsLikeInCelsius, isFahrenheit),
@@ -135,9 +136,5 @@ class HomeViewModel @Inject constructor(
             userRepository.logout()
             onComplete()
         }
-    }
-
-    fun refreshWeather() {
-        loadHomeData()
     }
 }

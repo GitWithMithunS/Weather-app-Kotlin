@@ -76,8 +76,8 @@ class CityViewModel @Inject constructor(
             emptyList()
         }
 
-        _uiState.value = _uiState.value.copy(newCity = value, suggestions = suggestions, error = null)
-//        _uiState.value = _uiState.value.copy(newCity = value, error = null)
+        _uiState.value =
+            _uiState.value.copy(newCity = value, suggestions = suggestions, error = null)
     }
 
     fun addCity(cityName: String) {
@@ -107,7 +107,12 @@ class CityViewModel @Inject constructor(
                     val validatedCityName = weatherResponse?.name ?: cityName.trim()
 
                     // Double check with validated name from API with present cities
-                    if (state.cities.any { it.cityName.equals(validatedCityName, ignoreCase = true) }) {
+                    if (state.cities.any {
+                            it.cityName.equals(
+                                validatedCityName,
+                                ignoreCase = true
+                            )
+                        }) {
                         _uiState.value = state.copy(
                             isLoading = false,
                             error = "City already added",
@@ -123,9 +128,10 @@ class CityViewModel @Inject constructor(
                         longitude = weatherResponse?.coord?.lon ?: 0.0
                     )
 
-                loadCities()
-                // Clear the search field and suggestions after adding a city
-                    _uiState.value = _uiState.value.copy(newCity = TextFieldValue(), suggestions = emptyList())
+                    loadCities()
+                    // Clear the search field and suggestions after adding a city
+                    _uiState.value =
+                        _uiState.value.copy(newCity = TextFieldValue(), suggestions = emptyList())
                     loadCities()
                     _uiState.value = _uiState.value.copy(newCity = TextFieldValue())
                 } else {

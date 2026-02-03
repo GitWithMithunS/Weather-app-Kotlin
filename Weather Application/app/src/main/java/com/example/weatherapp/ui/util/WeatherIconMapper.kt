@@ -28,10 +28,10 @@ object WeatherIconMapper {
     fun getIconColor(iconCode: String): Color {
         val isDarkTheme = isSystemInDarkTheme()
         return when (iconCode.lowercase()) {
-            "01d" -> Color(0xFFFFC107) // Sunny yellow
-            "01n" -> if (isDarkTheme) Color(0xFFF0F0F0) else Color(0xFF455A64) // Moon: light in dark theme, dark in light theme
-            "09d", "09n", "10d", "10n" -> Color(0xFF6397E5) // Rainy blue
-            else -> MaterialTheme.colorScheme.primary // Use theme color for others
+            "01d" -> Color(0xFFFFC107)
+            "01n" -> if (isDarkTheme) Color(0xFFF0F0F0) else Color(0xFF455A64)
+            "09d", "09n", "10d", "10n" -> Color(0xFF6397E5)
+            else -> MaterialTheme.colorScheme.primary
         }
     }
 }

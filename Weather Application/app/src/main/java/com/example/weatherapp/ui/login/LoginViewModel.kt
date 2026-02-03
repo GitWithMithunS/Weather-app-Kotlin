@@ -62,7 +62,6 @@ class LoginViewModel @Inject constructor(
         val state = _uiState.value
         val username = state.username.text
         val password = state.password.text
-        val confirmPassword = state.confirmPassword.text
         val city = state.city.text
 
         Log.d("LoginViewModel", "=== REGISTER ATTEMPT ===")

@@ -17,9 +17,7 @@ class WeatherRepository @Inject constructor(
     private val units = "metric"
 
 
-    /**
-     * Get current weather for a city by name
-     */
+    // Get current weather for a city by name
     suspend fun getCurrentWeather(cityName: String): Result<CurrentWeatherResponse> {
         return try {
             Log.d("WeatherRepository", "=== getCurrentWeather Called ===")
@@ -33,7 +31,10 @@ class WeatherRepository @Inject constructor(
                 units = units
             )
             Log.d("WeatherRepository", " API Response received")
-            Log.d("WeatherRepository", "City: ${response.name}, Temp: ${response.mainWeather.temp}°C")
+            Log.d(
+                "WeatherRepository",
+                "City: ${response.name}, Temp: ${response.mainWeather.temp}°C"
+            )
             Result.success(response)
         } catch (e: Exception) {
             Log.e("WeatherRepository", " getCurrentWeather Error: ${e.message}")
@@ -43,9 +44,9 @@ class WeatherRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get current weather by coordinates
-     */
+
+    // Get current weather by coordinates
+
     suspend fun getCurrentWeatherByCoordinates(
         latitude: Double,
         longitude: Double
@@ -69,9 +70,9 @@ class WeatherRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get 5-day forecast for a city by name
-     */
+
+    // Get 5-day forecast for a city by name
+
     suspend fun getForecast(cityName: String): Result<WeatherResponse> {
         return try {
             Log.d("WeatherRepository", "=== getForecast Called ===")
@@ -91,9 +92,9 @@ class WeatherRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get 5-day forecast by coordinates
-     */
+
+    // Get 5-day forecast by coordinates
+
     suspend fun getForecastByCoordinates(
         latitude: Double,
         longitude: Double

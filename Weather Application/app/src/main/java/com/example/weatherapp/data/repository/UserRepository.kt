@@ -10,9 +10,8 @@ class UserRepository @Inject constructor(
     private val userDao: UserDao
 ) {
 
-    /**
-     * Save a new user and mark them as logged in
-     */
+
+    //Save a new user and mark them as logged in
     suspend fun saveAndLoginUser(
         username: String,
         password: String,
@@ -47,9 +46,8 @@ class UserRepository @Inject constructor(
         }
     }
 
-    /**
-     * Login user with username and password
-     */
+
+    // Login user with username and password
     suspend fun loginUser(username: String, password: String): Boolean {
         return try {
             val user = userDao.getUserByUsername(username)
@@ -67,9 +65,9 @@ class UserRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get currently logged in user
-     */
+
+    // Get currently logged in user
+
     suspend fun getCurrentUser(): UserEntity? {
         return try {
             userDao.getCurrentLoggedInUser()
@@ -79,9 +77,9 @@ class UserRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get user by username
-     */
+
+    // Get user by username
+
     suspend fun getUserByUsername(username: String): UserEntity? {
         return try {
             userDao.getUserByUsername(username)
@@ -91,9 +89,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    /**
-     * Update user details
-     */
+    //Update user details
     suspend fun updateUser(user: UserEntity): Boolean {
         return try {
             userDao.updateUser(user)
@@ -104,9 +100,8 @@ class UserRepository @Inject constructor(
         }
     }
 
-    /**
-     * Logout current user
-     */
+
+    //Logout current user
     suspend fun logout(): Boolean {
         return try {
             userDao.logoutAllUsers()
@@ -117,9 +112,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-    /**
-     * Delete user
-     */
+    // Delete user
     suspend fun deleteUser(username: String): Boolean {
         return try {
             userDao.deleteUserByUsername(username)

@@ -245,7 +245,7 @@ private fun WeatherDetailsContent(
                         }
                     }
 
-                    /* ===== STATS GRID ===== */
+                    //STATS GRID
                     item {
                         StatsGrid(
                             humidity = state.humidity,
@@ -256,7 +256,7 @@ private fun WeatherDetailsContent(
                         )
                     }
 
-                    /* ===== SUNRISE / SUNSET ===== */
+                    // SUNRISE / SUNSET
                     item {
                         Card(
                             colors = CardDefaults.cardColors(
@@ -273,19 +273,19 @@ private fun WeatherDetailsContent(
                                     title = "Sunrise",
                                     time = state.sunrise,
                                     icon = Icons.Filled.WbSunny,
-                                    tint = Color(0xFFFFC107) // Sunny yellow
+                                    tint = Color(0xFFFFC107)
                                 )
                                 SunInfo(
                                     title = "Sunset",
                                     time = state.sunset,
                                     icon = Icons.Filled.LightMode,
-                                    tint = Color(0xFFFFC107) // Sunny yellow
+                                    tint = Color(0xFFFFC107)
                                 )
                             }
                         }
                     }
 
-                    /* ===== 5-DAY FORECAST ===== */
+                    // 5-DAY FORECAST
                     item {
                         Text(
                             text = "5-Day Forecast",
@@ -330,7 +330,6 @@ private fun WeatherDetailsContent(
     }
 }
 
-/* ================= COMPONENTS ================= */
 
 @Composable
 private fun StatsGrid(
